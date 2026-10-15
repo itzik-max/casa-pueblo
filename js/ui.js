@@ -1,6 +1,6 @@
 /* Shared UI helpers: state, formatting, icons, modal, toast, tooltip. */
 
-const STORE_KEY = 'casa-portal-demo-v1';
+const STORE_KEY = 'casa-portal-demo-v2';
 
 const Store = {
   data: null,
@@ -123,6 +123,7 @@ const ICON_PATHS = {
   chart: '<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>',
   camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
   key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3"/>',
+sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',  layout: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/>',  sidebar: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/>',  arrowNext: '<path d="M19 12H5M11 6l-6 6 6 6"/>',  arrowPrev: '<path d="M5 12h14M13 6l6 6-6 6"/>',
 };
 function icon(name, cls = '') {
   return `<svg class="i ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[name] || ''}</svg>`;

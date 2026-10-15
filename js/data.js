@@ -50,12 +50,12 @@ function seedData() {
     timeline: [
       { name: 'אפיון ופרוגרמה', ps: '2026-01-05', pe: '2026-01-31', as: '2026-01-05', ae: '2026-01-28', status: 'done', note: 'נחתמה פרוגרמה סופית.', photos: [] },
       { name: 'תכנון', ps: '2026-02-01', pe: '2026-02-28', as: '2026-01-29', ae: '2026-02-26', status: 'done', note: '', photos: [] },
-      { name: 'בחירת חומרים', ps: '2026-02-15', pe: '2026-04-15', as: '2026-02-15', ae: '2026-04-20', status: 'done', note: 'כל החומרים נבחרו, כולל ריצוף וסניטריה.', photos: ['assets/img/p6.jpg'] },
-      { name: 'הריסה', ps: '2026-03-01', pe: '2026-03-31', as: '2026-03-02', ae: '2026-03-29', status: 'done', note: '', photos: ['assets/img/hero-3.jpg'] },
+      { name: 'בחירת חומרים', ps: '2026-02-15', pe: '2026-04-15', as: '2026-02-15', ae: '2026-04-20', status: 'done', note: 'כל החומרים נבחרו, כולל ריצוף וסניטריה.', photos: ['assets/img/j-55.jpg'] },
+      { name: 'הריסה', ps: '2026-03-01', pe: '2026-03-31', as: '2026-03-02', ae: '2026-03-29', status: 'done', note: '', photos: ['assets/img/before-kitchen.jpg', 'assets/img/before-1.jpg'] },
       { name: 'בנייה', ps: '2026-04-01', pe: '2026-06-10', as: '2026-04-01', ae: '2026-06-08', status: 'done', note: '', photos: [] },
       { name: 'תשתיות', ps: '2026-05-15', pe: '2026-08-05', as: '2026-05-18', ae: '2026-08-04', status: 'done', note: 'חשמל, אינסטלציה ומיזוג. כל הבדיקות עברו.', photos: [] },
-      { name: 'עבודות גמר', ps: '2026-08-06', pe: '2026-11-20', as: '2026-08-06', ae: null, status: 'active', note: 'ריצוף הסתיים. צבע וטיח בביצוע.', photos: ['assets/img/p2.jpg', 'assets/img/p5.jpg'] },
-      { name: 'נגרות', ps: '2026-09-15', pe: '2026-11-30', as: '2026-09-22', ae: null, status: 'delay', note: 'ספריית הסלון מתעכבת בכשבוע אצל הנגר. המסירה לא מושפעת.', photos: ['assets/img/p3.jpg'] },
+      { name: 'עבודות גמר', ps: '2026-08-06', pe: '2026-11-20', as: '2026-08-06', ae: null, status: 'active', note: 'ריצוף הסתיים. צבע וטיח בביצוע.', photos: ['assets/img/j-35.jpg', 'assets/img/j-8.jpg'] },
+      { name: 'נגרות', ps: '2026-09-15', pe: '2026-11-30', as: '2026-09-22', ae: null, status: 'delay', note: 'ספריית הסלון מתעכבת בכשבוע אצל הנגר. המסירה לא מושפעת.', photos: ['assets/img/j-63.jpg'] },
       { name: 'התקנות', ps: '2026-12-01', pe: '2027-01-20', as: null, ae: null, status: 'future', note: '', photos: [] },
       { name: 'מסירה', ps: '2027-02-01', pe: '2027-02-15', as: null, ae: null, status: 'future', note: '', photos: [] },
     ],
@@ -105,20 +105,20 @@ function seedData() {
     materials: [
       { id: 'm1', name: 'אריח קיר', cat: 'ריצוף וחיפויים', space: 'חדרי רחצה', maker: 'Porcelanosa', model: 'Bottega Caliza', sku: '45821', color: 'Sand', supplier: 'נגב קרמיקה', price: 280, unit: 'מ"ר', link: 'https://www.porcelanosa.com', warranty: '10 שנים', notes: 'אמבטיית הורים, קיר מקלחת עד התקרה', status: 'הוזמן', swatch: '#d9cbb4' },
       { id: 'm2', name: 'ריצוף פורצלן 60×120', cat: 'ריצוף וחיפויים', space: 'סלון', maker: 'Marazzi', model: 'Grande Stone', sku: 'M0ZG', color: 'Greige', supplier: 'נגב קרמיקה', price: 245, unit: 'מ"ר', link: '', warranty: '10 שנים', notes: 'גם במטבח ובמסדרון', status: 'סופק', swatch: '#b9b1a5' },
-      { id: 'm3', name: 'פרקט עץ אלון', cat: 'ריצוף וחיפויים', space: 'חדר הורים', maker: 'Kährs', model: 'Oak Nouveau', sku: 'K-151', color: 'Natural Matt', supplier: 'עץ הפרקט', price: 390, unit: 'מ"ר', link: '', warranty: '25 שנים', notes: 'גם בחדרי הילדים', status: 'הותקן', img: 'assets/img/p3.jpg' },
-      { id: 'm4', name: 'חזיתות מטבח', cat: 'מטבח', space: 'מטבח', maker: 'מטבחי אלון', model: 'Fenix NTM', sku: 'FX-0720', color: 'Grigio Londra', supplier: 'מטבחי אלון', price: null, unit: '', link: '', warranty: '7 שנים', notes: 'ידיות שקועות, ציר טריקה שקטה', status: 'הוזמן', img: 'assets/img/p4.jpg' },
+      { id: 'm3', name: 'פרקט עץ אלון', cat: 'ריצוף וחיפויים', space: 'חדר הורים', maker: 'Kährs', model: 'Oak Nouveau', sku: 'K-151', color: 'Natural Matt', supplier: 'עץ הפרקט', price: 390, unit: 'מ"ר', link: '', warranty: '25 שנים', notes: 'גם בחדרי הילדים', status: 'הותקן', img: 'assets/img/j-58.jpg' },
+      { id: 'm4', name: 'חזיתות מטבח', cat: 'מטבח', space: 'מטבח', maker: 'מטבחי אלון', model: 'Fenix NTM', sku: 'FX-0720', color: 'Grigio Londra', supplier: 'מטבחי אלון', price: null, unit: '', link: '', warranty: '7 שנים', notes: 'ידיות שקועות, ציר טריקה שקטה', status: 'הוזמן', img: 'assets/img/j-35.jpg' },
       { id: 'm5', name: 'משטח שיש קוורץ', cat: 'מטבח', space: 'מטבח', maker: 'קיסר', model: '5143', sku: '5143-20', color: 'White Attica', supplier: 'שיש הגליל', price: null, unit: '', link: 'https://www.caesarstone.co.il', warranty: '25 שנים', notes: 'עובי 2 ס"מ, אי עם נפילה לרצפה', status: 'נמדד', swatch: '#ece9e4' },
       { id: 'm6', name: 'ברז מטבח נשלף', cat: 'סניטריה', space: 'מטבח', maker: 'Hansgrohe', model: 'Talis M54', sku: '72808000', color: 'כרום', supplier: 'אלוני סניטריה', price: 1850, unit: 'יח׳', link: '', warranty: '5 שנים', notes: '', status: 'הוזמן', swatch: '#c6cbd1' },
       { id: 'm7', name: 'ברז אמבטיה עומד', cat: 'סניטריה', space: 'חדרי רחצה', maker: 'Hansgrohe', model: '', sku: '', color: '', supplier: 'אלוני סניטריה', price: null, unit: '', link: '', warranty: '', notes: 'ממתין לבחירה בין שתי אפשרויות', status: 'ממתין לבחירה', swatch: '#e7e3dc' },
       { id: 'm8', name: 'אסלה תלויה', cat: 'סניטריה', space: 'שירותי אורחים', maker: 'Duravit', model: 'ME by Starck', sku: '2529090000', color: 'לבן', supplier: 'אלוני סניטריה', price: 2400, unit: 'יח׳', link: '', warranty: '10 שנים', notes: 'כולל מושב טריקה שקטה', status: 'סופק', swatch: '#f4f3ef' },
-      { id: 'm9', name: 'מנורות תלויות', cat: 'תאורה', space: 'פינת אוכל', maker: 'Flos', model: 'IC Lights S1', sku: 'F3175059', color: 'פליז', supplier: 'קמחי תאורה', price: 3200, unit: 'יח׳', link: '', warranty: '2 שנים', notes: '3 יחידות מעל השולחן', status: 'הוזמן', img: 'assets/img/hero-5.jpg' },
+      { id: 'm9', name: 'מנורות תלויות', cat: 'תאורה', space: 'פינת אוכל', maker: 'Flos', model: 'IC Lights S1', sku: 'F3175059', color: 'פליז', supplier: 'קמחי תאורה', price: 3200, unit: 'יח׳', link: '', warranty: '2 שנים', notes: '3 יחידות מעל השולחן', status: 'הוזמן', img: 'assets/img/t-110.jpg' },
       { id: 'm10', name: 'גוף תאורה שקוע', cat: 'תאורה', space: 'שטחים כלליים', maker: 'Delta Light', model: 'Reo', sku: 'DL-202', color: 'שחור מט', supplier: 'קמחי תאורה', price: 260, unit: 'יח׳', link: '', warranty: '3 שנים', notes: '42 יחידות', status: 'הותקן', swatch: '#3b3b3b' },
       { id: 'm11', name: 'צבע קירות', cat: 'שונות', space: 'סלון', maker: 'טמבור', model: 'סופרקריל', sku: '', color: 'Linen White 1025', supplier: 'טמבור', price: null, unit: '', link: '', warranty: '', notes: 'כל הקומה', status: 'בביצוע', swatch: '#efe8da' },
-      { id: 'm12', name: 'ספריית סלון', cat: 'נגרות', space: 'סלון', maker: 'נגריית השרון', model: 'בהתאמה אישית', sku: '', color: 'אלון מעושן', supplier: 'נגריית השרון', price: null, unit: '', link: '', warranty: '5 שנים', notes: 'לפי תכנית נגרות V4', status: 'בייצור', img: 'assets/img/p8.jpg' },
+      { id: 'm12', name: 'ספריית סלון', cat: 'נגרות', space: 'סלון', maker: 'נגריית השרון', model: 'בהתאמה אישית', sku: '', color: 'אלון מעושן', supplier: 'נגריית השרון', price: null, unit: '', link: '', warranty: '5 שנים', notes: 'לפי תכנית נגרות V4', status: 'בייצור', img: 'assets/img/j-63.jpg' },
       { id: 'm13', name: 'ארונות קיר', cat: 'נגרות', space: 'חדרי ילדים', maker: 'נגריית השרון', model: 'בהתאמה אישית', sku: '', color: 'לבן משי', supplier: 'נגריית השרון', price: null, unit: '', link: '', warranty: '5 שנים', notes: '', status: 'בייצור', swatch: '#f2f0ea' },
-      { id: 'm14', name: 'מקלחון ויטרינה', cat: 'סניטריה', space: 'חדרי רחצה', maker: 'זכוכית הדר', model: 'Walk-in', sku: '', color: 'שקוף, פרופיל שחור', supplier: 'זכוכית הדר', price: 4800, unit: 'יח׳', link: '', warranty: '3 שנים', notes: 'ימדד לאחר החיפוי', status: 'נבחר', swatch: '#cfd8db' },
+      { id: 'm14', name: 'מקלחון ויטרינה', cat: 'סניטריה', space: 'חדרי רחצה', maker: 'זכוכית הדר', model: 'Walk-in', sku: '', color: 'שקוף, פרופיל שחור', supplier: 'זכוכית הדר', price: 4800, unit: 'יח׳', link: '', warranty: '3 שנים', notes: 'ימדד לאחר החיפוי', status: 'נבחר', img: 'assets/img/j-49.jpg' },
       { id: 'm15', name: 'דק עץ', cat: 'גינה וחוץ', space: 'מרפסת', maker: 'Ipe', model: '', sku: '', color: 'טבעי', supplier: 'עץ הפרקט', price: null, unit: '', link: '', warranty: '', notes: 'ממתין לתכנית פיתוח', status: 'ממתין לבחירה', swatch: '#8a6a4c' },
-      { id: 'm16', name: 'מיטה זוגית מרופדת', cat: 'ריהוט', space: 'חדר הורים', maker: 'Natuzzi', model: 'Ludovico', sku: '', color: 'פשתן', supplier: 'נטוצי ישראל', price: null, unit: '', link: '', warranty: '', notes: '', status: 'נבחר', swatch: '#cbbfae' },
+      { id: 'm16', name: 'מיטה זוגית מרופדת', cat: 'ריהוט', space: 'חדר הורים', maker: 'Natuzzi', model: 'Ludovico', sku: '', color: 'פשתן', supplier: 'נטוצי ישראל', price: null, unit: '', link: '', warranty: '', notes: '', status: 'נבחר', img: 'assets/img/j-43.jpg' },
     ],
 
     // Each expense lives once and feeds finance, materials, suppliers and documents.
@@ -176,12 +176,12 @@ function seedData() {
     ],
 
     updates: [
-      { id: 'u1', date: '2026-10-13', title: 'ריצוף קומה עליונה הושלם', stage: 'עבודות גמר', desc: 'הסתיים הריצוף בכל הקומה העליונה. מחר מתחילה שכבת צבע ראשונה.', photos: ['assets/img/p2.jpg', 'assets/img/p5.jpg', 'assets/img/p9.jpg'] },
-      { id: 'u2', date: '2026-10-06', title: 'התחלנו בהתקנת הנגרות', stage: 'נגרות', desc: 'הגיעו גופי הארונות לחדרי הילדים. הספרייה בסלון עדיין בייצור.', photos: ['assets/img/p3.jpg', 'assets/img/p1.jpg'] },
-      { id: 'u3', date: '2026-09-24', title: 'חיפוי אמבטיית ההורים', stage: 'עבודות גמר', desc: 'אריחי Porcelanosa בגוון Sand הותקנו על קיר המקלחת עד התקרה.', photos: ['assets/img/p6.jpg', 'assets/img/p4.jpg'] },
-      { id: 'u4', date: '2026-08-04', title: 'תשתיות הושלמו', stage: 'תשתיות', desc: 'חשמל, אינסטלציה ומיזוג. כל הבדיקות עברו בהצלחה.', photos: ['assets/img/p7.jpg'] },
-      { id: 'u5', date: '2026-06-08', title: 'סיום שלב הבנייה', stage: 'בנייה', desc: 'הקירות החדשים עומדים והפתחים מוכנים לאלומיניום.', photos: ['assets/img/hero-5.jpg'] },
-      { id: 'u6', date: '2026-03-02', title: 'לפני שמתחילים', stage: 'לפני', desc: 'תיעוד מצב קיים לפני ההריסה.', photos: ['assets/img/hero-3.jpg'] },
+      { id: 'u1', date: '2026-10-13', title: 'הגמרים בקומה העליונה', stage: 'עבודות גמר', desc: 'הריצוף בקומה העליונה הושלם, ושכבת הצבע הראשונה כבר על הקירות. חדר ההורים מקבל את צורתו הסופית.', photos: ['assets/img/j-43.jpg', 'assets/img/j-28.jpg', 'assets/img/j-8.jpg', 'assets/img/j-22.jpg', 'assets/img/j-1.jpg'] },
+      { id: 'u2', date: '2026-10-06', title: 'התחלנו בהתקנת הנגרות', stage: 'נגרות', desc: 'הגיעו גופי הארונות לחדרי הילדים. הספרייה בסלון עדיין בייצור.', photos: ['assets/img/j-63.jpg', 'assets/img/j-55.jpg'] },
+      { id: 'u3', date: '2026-09-24', title: 'חיפוי אמבטיית ההורים', stage: 'עבודות גמר', desc: 'אריחי Porcelanosa בגוון Sand הותקנו על קיר המקלחת עד התקרה.', photos: ['assets/img/j-49.jpg', 'assets/img/j-40.jpg'] },
+      { id: 'u4', date: '2026-08-04', title: 'תשתיות הושלמו', stage: 'תשתיות', desc: 'חשמל, אינסטלציה ומיזוג. כל הבדיקות עברו בהצלחה.', photos: ['assets/img/before-4.jpg', 'assets/img/j-31.jpg'] },
+      { id: 'u5', date: '2026-06-08', title: 'סיום שלב הבנייה', stage: 'בנייה', desc: 'הקירות החדשים עומדים והפתחים מוכנים לאלומיניום.', photos: ['assets/img/before-1.jpg', 'assets/img/j-33.jpg'] },
+      { id: 'u6', date: '2026-03-02', title: 'לפני שמתחילים', stage: 'לפני', desc: 'תיעוד מצב קיים לפני ההריסה.', photos: ['assets/img/before-living.jpg', 'assets/img/before-kitchen.jpg', 'assets/img/before-2.jpg', 'assets/img/before-3.jpg', 'assets/img/before-bath.jpg'] },
     ],
 
     documents: [
@@ -251,11 +251,32 @@ function seedData() {
     // Back-office portfolio (other families shown only to staff)
     portfolio: [
       { id: 'p-avrahami', name: 'בית אברהמי', client: 'אורי ונועה אברהמי', city: 'רמת השרון', pm: 'רועי מזרחי', stage: 'עבודות גמר', progress: 68, openTasks: 5, pendingApprovals: 3, schedule: 'delay', alerts: 1, img: 'assets/img/hero-4.jpg' },
-      { id: 'p-shalev', name: 'דירת שליו', client: 'משפחת שליו', city: 'תל אביב', pm: 'רועי מזרחי', stage: 'תשתיות', progress: 41, openTasks: 2, pendingApprovals: 1, schedule: 'ok', alerts: 0, img: 'assets/img/p4.jpg' },
-      { id: 'p-katz', name: 'וילה כץ', client: 'משפחת כץ', city: 'כפר שמריהו', pm: 'עדי פרידמן', stage: 'תכנון', progress: 14, openTasks: 4, pendingApprovals: 2, schedule: 'ok', alerts: 0, img: 'assets/img/p6.jpg' },
+      { id: 'p-shalev', name: 'דירת שליו', client: 'משפחת שליו', city: 'תל אביב', pm: 'רועי מזרחי', stage: 'תשתיות', progress: 41, openTasks: 2, pendingApprovals: 1, schedule: 'ok', alerts: 0, img: 'assets/img/hero-1.jpg' },
+      { id: 'p-katz', name: 'וילה כץ', client: 'משפחת כץ', city: 'כפר שמריהו', pm: 'עדי פרידמן', stage: 'תכנון', progress: 14, openTasks: 4, pendingApprovals: 2, schedule: 'ok', alerts: 0, img: 'assets/img/t-101.jpg' },
       { id: 'p-bendavid', name: 'פנטהאוז בן דוד', client: 'משפחת בן דוד', city: 'הרצליה', pm: 'עדי פרידמן', stage: 'התקנות', progress: 86, openTasks: 1, pendingApprovals: 0, schedule: 'ok', alerts: 0, img: 'assets/img/hero-5.jpg' },
       { id: 'p-mor', name: 'בית מור', client: 'משפחת מור', city: 'כפר סבא', pm: 'רועי מזרחי', stage: 'הריסה', progress: 22, openTasks: 3, pendingApprovals: 0, schedule: 'risk', alerts: 2, img: 'assets/img/hero-3.jpg' },
-      { id: 'p-golan', name: 'בית גולן', client: 'משפחת גולן', city: 'רעננה', pm: 'עדי פרידמן', stage: 'מסירה', progress: 100, openTasks: 0, pendingApprovals: 0, schedule: 'done', alerts: 0, img: 'assets/img/p4.jpg' },
+      { id: 'p-golan', name: 'בית גולן', client: 'משפחת גולן', city: 'רעננה', pm: 'עדי פרידמן', stage: 'מסירה', progress: 100, openTasks: 0, pendingApprovals: 0, schedule: 'done', alerts: 0, img: 'assets/img/t-108.jpg' },
     ],
   };
 }
+
+// "About Casa Pueblo" tiles. Wording taken from casa-pueblo.co.il (home + about pages).
+const ABOUT = {
+  tagline: 'הבית שלכם, המקצוענות שלנו.',
+  intro: 'משמעות השם "קאסה פואבלו" היא "בית לעם", וזה בדיוק החזון שהצבנו לעצמנו: כל לקוח יוכל לעשות שינוי בביתו ולהפוך אותו לשלו.',
+  tiles: [
+    { big: '30+', title: 'שנות ניסיון', text: 'חורחה עברין, מנכ"ל החברה והאדריכל הראשי, מלווה את הפרויקט מהשרטוט הראשון ועד הכניסה בפועל, בשקיפות מלאה, בדיוק ובמקצועיות.' },
+    { big: '1', title: 'תחנה אחת לכל התהליך', text: 'שיטת האדריכלות היישומית מעניקה את כל השירותים במקום אחד, משלבי התכנון הראשונים ועד לסיבוב הקניות בסוף השיפוץ.' },
+    { big: '2', title: 'מחלקות, גג אחד', text: 'מחלקת התכנון, ומחלקת הבנייה, הפיקוח והניהול. בניגוד לרוב משרדי האדריכלים, אנחנו ממשיכים ללוות אתכם גם אחרי השרטוט.' },
+    { icon: 'sun', title: 'אור, אוויר ותאורה חמה', text: 'הרבה אור טבעי, חלוקה נכונה של המרחב, קווים נקיים ועדינים ותאורה חמה ורכה.' },
+    { icon: 'home', title: 'כל בית הוא יצירה', text: 'כל פרויקט שאנחנו לוקחים על עצמנו הופך ליצירה עצמאית, אישית וייחודית, בהתאם לתכנון שגיבשנו יחד איתכם.' },
+    { icon: 'shield', title: 'שקט נפשי', text: 'חברת Casa Pueblo תעניק לכם את השקט הנפשי הנדיר, שמגיע רק כשעובדים עם מקצוענים.' },
+  ],
+};
+
+// Real before / after pairs from the Ramat Hasharon project on the company site.
+const BEFORE_AFTER = [
+  { name: 'סלון', before: 'assets/img/before-living.jpg', after: 'assets/img/after-living.jpg' },
+  { name: 'מטבח', before: 'assets/img/before-kitchen.jpg', after: 'assets/img/after-kitchen.jpg' },
+  { name: 'חדר רחצה', before: 'assets/img/before-bath.jpg', after: 'assets/img/after-bath.jpg' },
+];

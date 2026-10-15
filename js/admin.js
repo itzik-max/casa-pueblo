@@ -210,7 +210,7 @@ const ACTIONS = {
         { id: 'name', label: 'שם הפרויקט', value: p.name, required: true },
         { id: 'address', label: 'כתובת', value: p.address },
         { id: 'handover', label: 'תאריך מסירה משוער', type: 'date', value: p.handover },
-        { id: 'image', label: 'תמונה ראשית', type: 'select', options: [['assets/img/hero-4.jpg', 'סלון'], ['assets/img/hero-1.jpg', 'כניסה'], ['assets/img/hero-5.jpg', 'פינת אוכל'], ['assets/img/p8.jpg', 'סלון 2']], value: p.image },
+        { id: 'image', label: 'תמונה ראשית', type: 'select', options: [['assets/img/hero-4.jpg', 'סלון'], ['assets/img/hero-1.jpg', 'כניסה'], ['assets/img/hero-5.jpg', 'פינת אוכל'], ['assets/img/j-33.jpg', 'סלון 2']], value: p.image },
       ],
       onSave(v) { Object.assign(p, v); Store.log('עדכן את פרטי הפרויקט', TEAM.pm.name); Store.save(); return 'פרטי הפרויקט נשמרו'; },
     });
@@ -334,7 +334,7 @@ const ACTIONS = {
       async onSave(v) {
         let photos = [];
         for (const f of [...v.files].slice(0, 6)) { const src = await readImage(f); if (src) photos.push(src); }
-        if (!photos.length) photos = ['assets/img/p9.jpg', 'assets/img/p4.jpg'];
+        if (!photos.length) photos = ['assets/img/j-28.jpg', 'assets/img/j-31.jpg'];
         Store.data.updates.unshift({ id: 'u' + Date.now(), date: TODAY, title: v.title, stage: v.stage, desc: v.desc, photos });
         Store.log(`העלה ${photos.length} תמונות: ${v.title}`, TEAM.pm.name);
         Store.notify(`נוספו ${photos.length} תמונות חדשות מהפרויקט`, 'photos');
@@ -517,7 +517,7 @@ Pages['bo-new'] = () => ({
       e.preventDefault();
       const f = new FormData(e.target);
       if (!f.get('name') || !f.get('family')) return;
-      Store.data.portfolio.push({ id: 'p' + Date.now(), name: f.get('name'), client: `משפחת ${f.get('family')}`, city: (f.get('address') || '').split(',').pop().trim() || '—', pm: f.get('pm'), stage: 'אפיון ופרוגרמה', progress: 0, openTasks: 0, pendingApprovals: 0, schedule: 'ok', alerts: 0, img: 'assets/img/p5.jpg' });
+      Store.data.portfolio.push({ id: 'p' + Date.now(), name: f.get('name'), client: `משפחת ${f.get('family')}`, city: (f.get('address') || '').split(',').pop().trim() || '—', pm: f.get('pm'), stage: 'אפיון ופרוגרמה', progress: 0, openTasks: 0, pendingApprovals: 0, schedule: 'ok', alerts: 0, img: 'assets/img/t-102.jpg' });
       Store.log(`יצר פרויקט חדש: ${f.get('name')}`, TEAM.pm.name);
       Store.save();
       toast(f.get('invite') ? 'הפרויקט נוצר וההזמנות נשלחו ללקוחות' : 'הפרויקט נוצר');

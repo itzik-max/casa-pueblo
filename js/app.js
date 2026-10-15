@@ -46,10 +46,11 @@ const App = {
   render() {
     Tip.hide();
     const app = document.getElementById('app');
-    if (!Store.session) { app.innerHTML = loginView(); mountLogin(app); return; }
+    if (!Store.session) { document.body.className = 'theme-navy'; app.innerHTML = loginView(); mountLogin(app); return; }
 
     const r = this.parse();
     const staff = this.isStaffView();
+    document.body.className = staff ? '' : 'theme-navy';
     const allowed = staff ? STAFF_NAV.map((n) => n[0]) : [...CLIENT_NAV, ...CLIENT_EXTRA].map((n) => n[0]);
     let page = r.page;
     if (!allowed.includes(page) || !Pages[page]) page = staff ? 'bo-home' : 'home';
@@ -62,6 +63,7 @@ const App = {
     const main = app.querySelector('.main');
     view.mount(main);
     bindShell(app);
+    bindNavTabs(app, this._lastPage !== page);
     if (this._lastPage !== page) { window.scrollTo(0, 0); this._lastPage = page; }
     else if (restoreFocus && !main.contains(document.activeElement)) {
       const el = document.getElementById(restoreFocus);
@@ -79,8 +81,8 @@ function loginView() {
     </div>
     <div class="login-panel">
       <form class="login-box" id="login" novalidate>
-        <img class="logo" src="assets/img/logo.png" alt="Casa Pueblo">
-        <h1>CASA | הבית שלי</h1>
+        ${wordmark('lg')}
+        <h1>הבית שלי</h1>
         <p class="lede">כניסה לאזור האישי של הפרויקט שלכם</p>
         <div class="seg" role="group" aria-label="סוג כניסה" style="margin-bottom:14px">
           <button type="button" aria-pressed="true" data-by="email">אימייל</button>
@@ -151,10 +153,87 @@ function navLink([page, ic, label], current, count) {
   return `<a href="#/${page}" ${page === current ? 'aria-current="page"' : ''}>${icon(ic)}<span>${label}</span>${count ? `<span class="count">${count}</span>` : ''}</a>`;
 }
 
+// Typographic stand-in for the logo on dark backgrounds (the site PNG has a white background).
+function wordmark(size = '') {
+  return `<a class="wordmark ${size}" href="#/home" aria-label="Casa Pueblo – הבית שלי"><span class="wm">CAS<em>A</em><small>PUEBLO</small></span><span class="sub">הבית שלי</span></a>`;
+}
+
+function navMode() { return (Store.session && Store.session.nav) || 'tabs'; }
+
+// "Previous / next" between client sections, so the tabs can be read in order.
+function pager(page) {
+  const i = CLIENT_NAV.findIndex((n) => n[0] === page);
+  if (i < 0) return '';
+  const prev = CLIENT_NAV[i - 1], next = CLIENT_NAV[i + 1];
+  return `<nav class="pager" aria-label="מעבר בין אזורים">
+    ${prev ? `<a class="prev" href="#/${prev[0]}"><span class="k">${icon('arrowPrev')}הקודם</span><span class="v">${prev[2]}</span></a>` : ''}
+    ${next ? `<a class="next" href="#/${next[0]}"><span class="k">הבא${icon('arrowNext')}</span><span class="v">${next[2]}</span></a>` : ''}
+  </nav>`;
+}
+
+function clientMasthead(page, unread, tasks, staffSession) {
+  const items = [...CLIENT_NAV, CLIENT_EXTRA[0]];
+  return `
+  <header class="masthead">
+    <div class="masthead-top">
+      ${wordmark()}
+      ${staffSession ? '<span class="bo-banner" style="margin-inline-start:12px">תצוגת לקוח</span>' : ''}
+      <span class="spacer"></span>
+      <button class="icon-btn" id="open-search" aria-label="חיפוש">${icon('search')}</button>
+      <a class="icon-btn" href="#/notifications" aria-label="התראות${unread ? `, ${unread} חדשות` : ''}">${icon('bell')}${unread ? `<span class="badge-dot">${unread}</span>` : ''}</a>
+      <button class="icon-btn" id="nav-mode" aria-label="תפריט צד במקום טאבים" title="תפריט צד במקום טאבים">${icon('sidebar')}</button>
+      ${staffSession ? `<button class="icon-btn" id="switch-view" aria-label="חזרה ל-Back Office" title="חזרה ל-Back Office">${icon('grid')}</button>` : ''}
+      <div class="who"><span class="avatar">${initials('אורי אברהמי')}</span><span>אורי אברהמי</span></div>
+      <button class="icon-btn" id="logout" aria-label="יציאה">${icon('logout')}</button>
+    </div>
+    <div class="navtabs-wrap">
+      <span class="fade r"></span><span class="fade l"></span>
+      <button class="nudge r" data-nudge="1" aria-label="טאבים קודמים">${icon('back')}</button>
+      <nav class="navtabs" aria-label="תפריט ראשי">
+        ${items.map(([p, ic, l]) => {
+          const c = p === 'tasks' ? tasks : 0;
+          return `<a href="#/${p}" ${p === page ? 'aria-current="page"' : ''}>${icon(ic)}<span>${l}</span>${c ? `<span class="count">${c}</span>` : ''}</a>`;
+        }).join('')}
+      </nav>
+      <button class="nudge l" data-nudge="-1" aria-label="טאבים נוספים">${icon('chevron')}</button>
+    </div>
+  </header>`;
+}
+
+function bindNavTabs(app, pageChanged) {
+  const wrap = app.querySelector('.navtabs-wrap');
+  if (!wrap) return;
+  const strip = wrap.querySelector('.navtabs');
+  const update = () => {
+    // RTL: scrollLeft is 0 at the start (right edge) and negative towards the end.
+    const max = strip.scrollWidth - strip.clientWidth;
+    const pos = Math.abs(strip.scrollLeft);
+    wrap.classList.toggle('can-r', pos > 4);
+    wrap.classList.toggle('can-l', pos < max - 4);
+  };
+  strip.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  wrap.querySelectorAll('[data-nudge]').forEach((b) => (b.onclick = () => strip.scrollBy({ left: Number(b.dataset.nudge) * strip.clientWidth * 0.6 })));
+  const cur = strip.querySelector('[aria-current="page"]');
+  if (cur && pageChanged) {
+    const sr = strip.getBoundingClientRect(), cr = cur.getBoundingClientRect();
+    strip.scrollLeft += (cr.left + cr.width / 2) - (sr.left + sr.width / 2);
+  }
+  update();
+}
+
 function shellView(page, view, staff) {
   const tasks = openTasksCount();
   const unread = unreadCount();
   const staffSession = Store.session.role === 'staff';
+  if (!staff && navMode() === 'tabs') {
+    return `
+    <div class="shell tabs-mode">
+      ${clientMasthead(page, unread, tasks, staffSession)}
+      <main class="main" id="main">${view.html}${pager(page)}</main>
+      ${resetLink()}
+    </div>`;
+  }
   const sidebar = staff
     ? `<div class="nav-group">BACK OFFICE</div><nav>${STAFF_NAV.map((n) => navLink(n, page)).join('')}</nav>`
     : `<nav>${CLIENT_NAV.map((n) => navLink(n, page)).join('')}</nav>
@@ -164,16 +243,17 @@ function shellView(page, view, staff) {
   return `
   <div class="shell">
     <aside class="sidebar" aria-label="תפריט ראשי">
-      <div class="brand"><img src="assets/img/logo.png" alt="Casa Pueblo"><div class="tagline">CASA | הבית שלי</div></div>
+      <div class="brand">${staff ? '<img src="assets/img/logo.png" alt="Casa Pueblo"><div class="tagline">CASA | הבית שלי</div>' : wordmark()}</div>
       ${sidebar}
       <div class="side-foot">
+        ${!staff ? `<button class="btn btn-sm" style="background:rgba(255,255,255,.08);color:#fff;width:100%;margin-bottom:10px" id="nav-mode">${icon('layout')}תפריט טאבים למעלה</button>` : ''}
         ${staffSession ? `<button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:#fff;width:100%;margin-bottom:10px" id="switch-view">${staff ? 'צפייה כלקוח' : 'חזרה ל-Back Office'}</button>` : ''}
         <button class="btn btn-sm" style="background:transparent;color:#c7d2e0;padding:0" id="reset-demo">איפוס נתוני ההדגמה</button>
       </div>
     </aside>
     <div class="content">
       <header class="topbar">
-        <img class="logo" src="assets/img/logo.png" alt="Casa Pueblo">
+        ${staff ? '<img class="logo" src="assets/img/logo.png" alt="Casa Pueblo">' : `<span class="logo-wm">${wordmark()}</span>`}
         <span class="page-title">${esc(view.title)}</span>
         ${staff ? '<span class="bo-banner">צוות</span>' : ''}
         ${staffSession && !staff ? '<span class="bo-banner">תצוגת לקוח</span>' : ''}
@@ -183,7 +263,7 @@ function shellView(page, view, staff) {
         <div class="who"><span class="avatar ${staff ? 'navy' : ''}">${initials(who)}</span><span>${esc(who)}</span></div>
         <button class="icon-btn" id="logout" aria-label="יציאה">${icon('logout')}</button>
       </header>
-      <main class="main" id="main">${view.html}</main>
+      <main class="main" id="main">${view.html}${staff ? '' : pager(page)}</main>
     </div>
     ${staff ? staffTabbar(page) : clientTabbar(page, tasks)}
   </div>`;
@@ -202,9 +282,19 @@ function staffTabbar(page) {
   </nav>`;
 }
 
+function resetLink() {
+  return `<footer class="site-foot"><span>CASA PUEBLO · הבית שלכם, המקצוענות שלנו.</span><button class="link-btn" id="reset-demo">איפוס נתוני ההדגמה</button></footer>`;
+}
+
 function bindShell(app) {
   app.querySelector('#logout').onclick = logout;
   app.querySelector('#open-search').onclick = openSearch;
+  const nm = app.querySelector('#nav-mode');
+  if (nm) nm.onclick = () => {
+    Store.session.nav = navMode() === 'tabs' ? 'side' : 'tabs';
+    Store.save();
+    App.render();
+  };
   const more = app.querySelector('#open-more');
   if (more) more.onclick = (e) => { e.preventDefault(); openMore(); };
   const sw = app.querySelector('#switch-view');
@@ -285,7 +375,8 @@ Store.load();
 // ?as=client / ?as=staff opens the demo straight in that role (handy for presentations).
 (() => {
   const as = new URLSearchParams(location.search).get('as');
-  if (as === 'client' || as === 'staff') { Store.session = { role: as, view: as }; Store.save(); }
+  const nav = new URLSearchParams(location.search).get('nav');
+  if (as === 'client' || as === 'staff') { Store.session = { role: as, view: as, nav: nav === 'side' ? 'side' : 'tabs' }; Store.save(); }
 })();
 window.addEventListener('hashchange', () => { closeAllModals(); App.render(); });
 function closeAllModals() { while (modalStack.length) closeModal(); }

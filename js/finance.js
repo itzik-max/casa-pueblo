@@ -90,8 +90,8 @@ function financeBudget(q) {
       ${budgetMeter(fm)}
     </article>
 
-    ${overs.length ? `<div class="card card-pad" style="margin-top:14px;border-color:#efc4c0;background:#fdf6f4;display:flex;gap:10px;align-items:flex-start">
-      <span style="color:var(--st-red)">${icon('alert')}</span>
+    ${overs.length ? `<div class="card card-pad alert-card" style="margin-top:14px">
+      <span class="ico">${icon('alert')}</span>
       <div><b>חריגה מהתקציב ב${overs.map((c) => esc(c.name)).join(', ')}</b>
         <div class="small ink-2">${overs.map((c) => `${esc(c.name)}: התחייבות ${ils(c.commit)} מול תקציב ${ils(c.budget)} (חריגה של ${ils(c.commit - c.budget)})`).join(' · ')}</div></div>
     </div>` : ''}

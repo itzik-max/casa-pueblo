@@ -86,11 +86,71 @@ function openTaskRef(t) {
   if (t.ref.page === 'materials') return openMaterial(t.ref.id);
 }
 
-function openPhoto(src, caption) {
-  openModal({ title: caption || 'תמונה', cls: 'photo', wide: true, body: `<img src="${esc(src)}" alt="${esc(caption || '')}">` });
+// Full-screen photo viewer with previous / next across a set of photos.
+function openLightbox(items, start = 0) {
+  let i = start;
+  const el = document.createElement('div');
+  el.className = 'lightbox';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  const draw = () => {
+    const it = items[i];
+    el.innerHTML = `
+      <div class="lb-top"><span class="t">${esc(it.title || '')}</span><span class="n">${i + 1} / ${items.length}</span>
+        <button class="icon-btn" data-x aria-label="סגירה">${icon('close')}</button></div>
+      <div class="lb-stage">
+        <img src="${esc(it.src)}" alt="${esc(it.title || '')}">
+        ${items.length > 1 ? `<button class="nav prev" data-step="-1" aria-label="הקודמת">${icon('back')}</button><button class="nav next" data-step="1" aria-label="הבאה">${icon('chevron')}</button>` : ''}
+      </div>`;
+  };
+  const step = (n) => { i = (i + n + items.length) % items.length; draw(); };
+  const onKey = (e) => {
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft') step(1);
+    if (e.key === 'ArrowRight') step(-1);
+  };
+  const close = () => { el.remove(); document.removeEventListener('keydown', onKey); document.body.style.overflow = ''; };
+  el.addEventListener('click', (e) => {
+    const s = e.target.closest('[data-step]');
+    if (s) return step(Number(s.dataset.step));
+    if (e.target.closest('[data-x]') || e.target.classList.contains('lb-stage')) close();
+  });
+  let x0 = null;
+  el.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+  el.addEventListener('touchend', (e) => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1); x0 = null; });
+  document.addEventListener('keydown', onKey);
+  document.body.style.overflow = 'hidden';
+  draw();
+  document.body.appendChild(el);
 }
+function openPhoto(src, caption) { openLightbox([{ src, title: caption || '' }]); }
 
 /* ---------- ראשי ---------- */
+function aboutSection() {
+  return `
+  <section class="about" aria-labelledby="about-h">
+    <div class="about-head">
+      <div><span class="eyebrow">על קאסה פואבלו</span><h2 id="about-h">${esc(ABOUT.tagline)}</h2></div>
+      <p>${esc(ABOUT.intro)}</p>
+    </div>
+    <div class="about-grid">
+      ${ABOUT.tiles.slice(0, 3).map(aboutTile).join('')}
+      <div class="about-tile photo">
+        <span class="lux"><img src="assets/img/j-33.jpg" alt="סלון בפרויקט של קאסה פואבלו ברמת השרון" loading="lazy"></span>
+        <div class="quote">״בית לעם״</div>
+      </div>
+      ${ABOUT.tiles.slice(3).map(aboutTile).join('')}
+    </div>
+    <div class="about-foot"><span>Casa Pueblo · רח׳ זרחין 7, רעננה</span><a href="https://www.casa-pueblo.co.il" target="_blank" rel="noopener">casa-pueblo.co.il</a></div>
+  </section>`;
+}
+function aboutTile(t) {
+  return `<div class="about-tile">
+    ${t.big ? `<div class="big">${esc(t.big)}</div>` : `<div class="ic">${icon(t.icon)}</div>`}
+    <h3>${esc(t.title)}</h3><p>${esc(t.text)}</p>
+  </div>`;
+}
+
 Pages.home = () => {
   const d = Store.data;
   const p = d.project;
@@ -99,93 +159,103 @@ Pages.home = () => {
   const tasks = d.tasks.filter((t) => !t.done);
   const daysLeft = daysBetween(TODAY, p.handover);
   const latest = d.updates[0];
-  const allPhotos = d.updates.flatMap((u) => u.photos);
   const pm = TEAM[p.pm];
   const delays = d.timeline.filter((s) => s.status === 'delay');
+  const active = d.timeline.find((s) => s.status === 'active');
+  const nextStage = d.timeline.find((s) => s.status === 'future');
+  const gallery = d.updates.filter((u) => u.stage !== 'לפני').flatMap((u) => u.photos.map((src) => ({ src, title: u.title, sub: fmtDate(u.date) }))).slice(0, 5);
+  const sinceUpdate = daysBetween(p.weekly.updated, TODAY);
   return {
     title: 'ראשי',
     html: `
-      <section class="hero" style="background-image:url('${esc(p.image)}')">
-        <div class="hero-body">
-          <div class="hello">שלום משפחת ${esc(p.family)}, ברוכים הבאים לבית שלכם ב-CASA PUEBLO</div>
-          <h1>${esc(p.name)}</h1>
-          <div class="addr">${icon('pin')}${esc(p.address)}</div>
-          <div class="hero-stage">
-            ${progressRing(p.progress, 58, 5)}
-            <div class="bar">
+      <section class="lux-hero">
+        <div class="bg" style="background-image:url('${esc(p.image)}')" role="img" aria-label="${esc(p.name)}"></div>
+        <div class="inner">
+          <span class="eyebrow">${esc(p.name)} · ${esc(p.address.split(',').pop().trim())}</span>
+          <h1>שלום משפחת ${esc(p.family)}</h1>
+          <div class="lede">ברוכים הבאים לבית שלכם ב-CASA PUEBLO. כל הבית, כל הפרויקט, במקום אחד.</div>
+          <div class="stage-band">
+            ${progressRing(p.progress, 74, 4, '#d4b483', 'rgba(242,235,223,.16)')}
+            <div>
               <div class="lbl">שלב נוכחי</div>
               <div class="val">${esc(p.stage)}</div>
-              <div class="mini-timeline" aria-hidden="true">${d.timeline.map((s) => `<i class="${s.status}"></i>`).join('')}</div>
+              <div class="stage-steps" aria-hidden="true">${d.timeline.map((s) => `<i class="${s.status}" title="${esc(s.name)}"></i>`).join('')}</div>
+              <div class="stage-names"><span>${esc(d.timeline[0].name)}</span><span>${esc(d.timeline[d.timeline.length - 1].name)}</span></div>
             </div>
           </div>
         </div>
       </section>
 
-      <div class="facts" style="margin-top:14px">
+      <article class="weekly lift" aria-labelledby="weekly-h">
+        <div class="copy">
+          <div class="head">
+            <span class="eyebrow">העדכון השבועי</span>
+            <span class="date">${icon('clock')}עודכן ${fmtDateLong(p.weekly.updated)}${sinceUpdate <= 7 ? ' · חדש' : ''}</span>
+          </div>
+          <h2 id="weekly-h">כרגע בפרויקט</h2>
+          <blockquote>${esc(p.weekly.text)}</blockquote>
+          <div class="highlights">
+            ${active ? `<span>בביצוע: <b>${esc(active.name)}</b></span>` : ''}
+            ${delays.map((s) => `<span>לתשומת לב: <b>${esc(s.name)}</b></span>`).join('')}
+            ${nextStage ? `<span>השלב הבא: <b>${esc(nextStage.name)}</b> · ${fmtDate(nextStage.ps)}</span>` : ''}
+          </div>
+          <div class="sign">
+            <span class="avatar navy lg">${initials(pm.name)}</span>
+            <div><b>${esc(pm.name)}</b><span>${esc(pm.role)}</span></div>
+            <span class="sig">${esc(pm.name.split(' ')[0])}</span>
+          </div>
+        </div>
+        <button class="lux photo" data-lbhome="0" aria-label="תמונת השבוע">
+          <img src="${esc(latest.photos[0])}" alt="" loading="lazy">
+          <span class="tag">מהשטח השבוע</span>
+          <span class="cap"><b>${esc(latest.title)}</b>${fmtDate(latest.date)}</span>
+        </button>
+      </article>
+
+      <div class="stat-strip" style="margin-top:34px">
         <div><div class="k">תאריך התחלה</div><div class="v">${fmtDate(p.start)}</div></div>
         <div><div class="k">מסירה משוערת</div><div class="v">${fmtDate(p.handover)}</div></div>
-        <div><div class="k">נותרו עד המסירה</div><div class="v">${daysLeft} ימים</div></div>
-        <div><div class="k">מנהל הפרויקט</div><div class="v">${esc(pm.name)}</div></div>
+        <div><div class="k">עד המסירה</div><div class="v">${daysLeft} <span style="font-size:.55em">ימים</span></div></div>
+        <div><div class="k">מנהל הפרויקט</div><div class="v" style="font-size:22px;margin-top:8px">${esc(pm.name)}</div><div class="s"><a href="tel:${pm.phone}" class="ltr">${pm.phone}</a></div></div>
       </div>
 
-      <div class="grid wide-left" style="margin-top:14px">
+      <div class="grid wide-left" style="margin-top:34px">
+        <article class="card card-pad">
+          <div class="card-head"><h3>ממתין לכם</h3>${tasks.length ? pill('red', `${tasks.length} פתוחות`) : pill('green', 'הכול מטופל')}</div>
+          ${tasks.length ? `<ul class="action-list">
+            ${tasks.slice(0, 4).map((t) => `
+              <li>
+                <span class="ico ${t.level}">${icon(t.type === 'approval' ? 'check' : t.type === 'choice' ? 'materials' : 'info')}</span>
+                <div class="txt"><b>${esc(t.title)}</b><span>${esc(t.sub)}</span></div>
+                <button class="btn btn-sm ${t.level === 'red' ? 'btn-primary' : 'btn-ghost'}" data-task="${t.id}">${t.type === 'approval' ? 'לאישור' : 'לצפייה'}</button>
+              </li>`).join('')}
+          </ul>${tasks.length > 4 ? `<a class="link-btn small" href="#/tasks">לכל המשימות (${tasks.length})</a>` : ''}` : '<div class="empty">אין משימות פתוחות</div>'}
+        </article>
         <div class="stack">
-          <article class="card card-pad update-card">
-            <div class="card-head" style="margin-bottom:0">
-              <h3>כרגע בפרויקט</h3>
-              <span class="meta">${icon('clock', 'xs')}עודכן ${fmtDate(p.weekly.updated)}</span>
-            </div>
-            <blockquote>${esc(p.weekly.text)}</blockquote>
-            <div class="author"><span class="avatar navy">${initials(pm.name)}</span><div><b>${esc(pm.name)}</b><div class="small muted">${esc(pm.role)}</div></div></div>
-          </article>
-
-          <article class="card card-pad">
-            <div class="card-head"><h3>עדכון אחרון מהשטח</h3><a class="link-btn" href="#/photos">ליומן הפרויקט</a></div>
-            <div class="split" style="align-items:flex-start;margin-bottom:10px">
-              <div><b>${esc(latest.title)}</b><div class="small muted">${fmtDate(latest.date)} · ${esc(latest.stage)}</div></div>
-            </div>
-            <div class="thumbs">
-              ${allPhotos.slice(0, 5).map((src) => `<button class="photo-btn" data-src="${esc(src)}" style="padding:0;border:0;background:none"><img src="${esc(src)}" alt="" loading="lazy"></button>`).join('')}
-              <a class="more" href="#/photos">עוד ${Math.max(allPhotos.length - 5, 0)}</a>
-            </div>
-          </article>
-        </div>
-
-        <div class="stack">
-          <article class="card card-pad">
-            <div class="card-head"><h3>ממתין לכם</h3>${tasks.length ? pill('red', `${tasks.length} פתוחות`) : pill('green', 'הכול מטופל')}</div>
-            ${tasks.length ? `<ul class="action-list">
-              ${tasks.slice(0, 4).map((t) => `
-                <li>
-                  <span class="ico ${t.level}">${icon(t.type === 'approval' ? 'check' : t.type === 'choice' ? 'materials' : 'info')}</span>
-                  <div class="txt"><b>${esc(t.title)}</b><span>${esc(t.sub)}</span></div>
-                  <button class="btn btn-sm ${t.level === 'red' ? 'btn-primary' : 'btn-ghost'}" data-task="${t.id}">${t.type === 'approval' ? 'לאישור' : 'לצפייה'}</button>
-                </li>`).join('')}
-            </ul>${tasks.length > 4 ? `<a class="link-btn small" href="#/tasks">לכל המשימות (${tasks.length})</a>` : ''}` : '<div class="empty">אין משימות פתוחות</div>'}
-          </article>
-
           <a class="next-pay" href="#/finance" style="text-decoration:none">
             <span class="k">התשלום הבא לקאסה פואבלו</span>
             <span class="v num">${cm.next ? ils(cm.next.amount) : '—'}</span>
             <span class="d">${cm.next ? `${esc(cm.next.name)} · ${fmtDate(cm.next.due)}` : 'כל התשלומים הוסדרו'}</span>
           </a>
-
           <article class="card card-pad">
             <div class="card-head"><h3>תקציב הבית</h3><a class="link-btn small" href="#/finance?tab=budget">לפירוט</a></div>
-            <div class="split small ink-2" style="margin-bottom:8px"><span>ניצול תקציב</span><b class="num" style="color:var(--navy)">${pct(fm.util)}</b></div>
+            <div class="split small ink-2" style="margin-bottom:10px"><span>ניצול תקציב</span><b class="num" style="color:var(--ink)">${pct(fm.util)}</b></div>
             ${budgetMeter(fm)}
           </article>
-
-          ${delays.length ? `
-          <article class="card card-pad">
-            <div class="card-head"><h3>לתשומת לבכם</h3>${statusPill('delay')}</div>
-            ${delays.map((s) => `<p style="margin:0" class="ink-2"><b style="color:var(--ink)">${esc(s.name)}:</b> ${esc(s.note)}</p>`).join('')}
-          </article>` : ''}
         </div>
-      </div>`,
+      </div>
+
+      <section style="margin-top:64px">
+        <div class="section-title"><div><span class="eyebrow">מהשטח</span><h2 style="margin-top:8px">התמונות האחרונות</h2></div><a class="link-btn" href="#/photos">ליומן הפרויקט</a></div>
+        <div class="mosaic">${gallery.map((g, i) => `<button class="lux" data-lbg="${i}" aria-label="${esc(g.title)}"><img src="${esc(g.src)}" alt="" loading="lazy"><span class="cap"><b>${esc(g.title)}</b>${esc(g.sub)}</span></button>`).join('')}</div>
+      </section>
+
+      ${aboutSection()}`,
     mount(root) {
       root.querySelectorAll('[data-task]').forEach((b) => (b.onclick = () => openTaskRef(Store.data.tasks.find((t) => t.id === b.dataset.task))));
-      root.querySelectorAll('.photo-btn').forEach((b) => (b.onclick = () => openPhoto(b.dataset.src)));
+      root.querySelectorAll('[data-lbg]').forEach((b) => (b.onclick = () => openLightbox(gallery, Number(b.dataset.lbg))));
+      const wk = root.querySelector('[data-lbhome]');
+      if (wk) wk.onclick = () => openLightbox(latest.photos.map((src) => ({ src, title: latest.title })), 0);
     },
   };
 };
@@ -335,8 +405,12 @@ Pages.plans = (q) => {
 };
 
 /* ---------- חומרים ובחירות ---------- */
+function isDark(hex) {
+  const n = parseInt(String(hex || "#dddddd").slice(1), 16);
+  return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) < 120;
+}
 function matVisual(m, cls = 'ph') {
-  return m.img ? `<img class="${cls}" src="${esc(m.img)}" alt="" loading="lazy">` : `<div class="${cls} swatch" style="background:${esc(m.swatch || '#ddd')}"></div>`;
+  return m.img ? `<span class="lux ${cls}"><img src="${esc(m.img)}" alt="" loading="lazy"></span>` : `<div class="${cls} swatch" style="background-color:${esc(m.swatch || "#ddd")}"><span class="sw-name${isDark(m.swatch) ? " light" : ""}">${esc(m.color || m.name)}</span></div>`;
 }
 function openMaterial(id) {
   const d = Store.data;
@@ -497,50 +571,69 @@ Pages.timeline = () => {
 };
 
 /* ---------- תמונות ---------- */
+// Before on the right (read first in RTL), after on the left; dragging reveals more of the after.
 function baSlider(before, after) {
   return `<div class="ba" id="ba">
-    <img class="before" src="${esc(before)}" alt="לפני">
-    <div class="clip" style="clip-path: inset(0 0 0 50%)"><img src="${esc(after)}" alt="אחרי"></div>
+    <img src="${esc(after)}" alt="אחרי">
+    <div class="clip" style="clip-path: inset(0 0 0 50%)"><img class="before" src="${esc(before)}" alt="לפני"></div>
     <span class="handle" style="left:50%"></span>
     <span class="tag b">לפני</span><span class="tag a">אחרי</span>
     <input type="range" min="0" max="100" value="50" aria-label="השוואת לפני ואחרי">
   </div>`;
 }
+function bindBA(root) {
+  const ba = root.querySelector('#ba');
+  if (!ba) return;
+  const r = ba.querySelector('input');
+  r.oninput = () => {
+    ba.querySelector('.clip').style.clipPath = `inset(0 0 0 ${r.value}%)`;
+    ba.querySelector('.handle').style.left = r.value + '%';
+  };
+}
+function luxImg(src, i, cap = '', sub = '') {
+  return `<button class="lux" data-lb="${i}" aria-label="הגדלת תמונה${cap ? ': ' + esc(cap) : ''}"><img src="${esc(src)}" alt="" loading="lazy">${cap ? `<span class="cap"><b>${esc(cap)}</b>${esc(sub)}</span>` : ''}</button>`;
+}
+
 Pages.photos = (q) => {
   const d = Store.data;
   const stage = q.stage || 'הכול';
   const stages = ['הכול', ...new Set(d.updates.map((u) => u.stage))];
   const list = d.updates.filter((u) => stage === 'הכול' || u.stage === stage);
+  const pairIdx = Math.min(Number(q.ba) || 0, BEFORE_AFTER.length - 1);
+  const pair = BEFORE_AFTER[pairIdx];
+  const all = [];
+  list.forEach((u) => u.photos.forEach((src) => all.push({ src, title: u.title, sub: `${fmtDate(u.date)} · ${u.stage}` })));
+  let k = 0;
   return {
     title: 'תמונות',
     html: `
-      <div class="page-head"><div><h1>יומן הפרויקט</h1><p>עדכונים ותמונות מהשטח, לפי תאריך ושלב</p></div></div>
+      <div class="page-head"><div><span class="eyebrow">יומן הפרויקט</span><h1>הבית, שלב אחר שלב</h1><p>עדכונים ותמונות מהשטח, לפי תאריך ושלב</p></div></div>
       <div class="chips" role="group" aria-label="סינון לפי שלב">
         ${stages.map((s) => `<button class="chip" aria-pressed="${s === stage}" data-stage="${esc(s)}">${esc(s)}</button>`).join('')}
       </div>
-      <div class="journal">
-        ${list.map((u) => `
-          <article class="card card-pad journal-entry">
-            <div class="head"><h3>${esc(u.title)}</h3><span class="small muted">${fmtDateLong(u.date)} · ${esc(u.stage)}</span></div>
-            <p>${esc(u.desc)}</p>
-            <div class="photo-grid">${u.photos.map((src) => `<button data-src="${esc(src)}" data-cap="${esc(u.title)}" aria-label="הגדלת תמונה"><img src="${esc(src)}" alt="" loading="lazy"></button>`).join('')}</div>
-          </article>`).join('')}
+      <div class="journal-lux" style="margin-top:18px">
+        ${list.map((u) => {
+          const dt = parseDate(u.date);
+          return `<article class="jentry">
+            <div class="when"><div class="d">${dt.getDate()}</div><div class="m">${HEB_MONTHS[dt.getMonth()]} ${dt.getFullYear()}</div><div class="st">${pill(u.stage === 'לפני' ? 'gray' : 'blue', u.stage)}</div></div>
+            <div>
+              <h3>${esc(u.title)}</h3>
+              <p>${esc(u.desc)}</p>
+              <div class="mosaic" data-n="${Math.min(u.photos.length, 5)}">${u.photos.map((src) => luxImg(src, k++, u.title, fmtDate(u.date))).join('')}</div>
+            </div>
+          </article>`;
+        }).join('')}
       </div>
-      <div class="section-title"><h2>Before &amp; After</h2><span class="small muted">ייפתח במלואו עם אלבום המסירה</span></div>
-      ${baSlider('assets/img/hero-4.jpg', 'assets/img/hero-4.jpg')}
-      ${demoNote('בהדגמה, תמונת ה"לפני" היא אותה תמונה בגווני אפור. בפרויקט אמיתי מעלים תמונה מהיום הראשון.')}`,
+      <section style="margin-top:64px">
+        <div class="page-head" style="margin-bottom:16px"><div><span class="eyebrow">Before &amp; After</span><h1 style="font-size:34px">מה היה, ומה יהיה</h1><p>גררו את הקו כדי להשוות. מתוך פרויקט של קאסה פואבלו ברמת השרון.</p></div></div>
+        <div class="ba-tabs">${BEFORE_AFTER.map((p, i) => `<button class="chip" aria-pressed="${i === pairIdx}" data-ba="${i}">${esc(p.name)}</button>`).join('')}</div>
+        ${baSlider(pair.before, pair.after)}
+      </section>`,
     mount(root) {
       root.querySelectorAll('[data-stage]').forEach((b) => (b.onclick = () => App.go('photos', { stage: b.dataset.stage })));
-      root.querySelectorAll('.photo-grid [data-src]').forEach((b) => (b.onclick = () => openPhoto(b.dataset.src, b.dataset.cap)));
-      const ba = root.querySelector('#ba');
-      if (ba) {
-        const r = ba.querySelector('input');
-        r.oninput = () => {
-          const v = r.value;
-          ba.querySelector('.clip').style.clipPath = `inset(0 0 0 ${v}%)`;
-          ba.querySelector('.handle').style.left = v + '%';
-        };
-      }
+      root.querySelectorAll('[data-ba]').forEach((b) => (b.onclick = () => App.go('photos', { stage: q.stage, ba: b.dataset.ba }, true)));
+      root.querySelectorAll('[data-lb]').forEach((b) => (b.onclick = () => openLightbox(all, Number(b.dataset.lb))));
+      bindBA(root);
     },
   };
 };
