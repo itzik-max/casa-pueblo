@@ -21,8 +21,8 @@ const Live = {
     const { data } = await this.sb.auth.getSession();
     if (!data.session) return false;
     const u = data.session.user;
-    const { data: prof } = await this.sb.from('profiles').select('is_staff, full_name').eq('id', u.id).maybeSingle();
-    this.user = { id: u.id, email: u.email, name: (prof && prof.full_name) || u.email.split('@')[0], staff: !!(prof && prof.is_staff) };
+    const { data: prof } = await this.sb.from('profiles').select('is_staff, is_admin, full_name').eq('id', u.id).maybeSingle();
+    this.user = { id: u.id, email: u.email, name: (prof && prof.full_name) || u.email.split('@')[0], staff: !!(prof && prof.is_staff), admin: !!(prof && prof.is_admin) };
     await this.loadRows();
     return true;
   },
@@ -143,6 +143,14 @@ const Live = {
   // Publishes this week's approved summary now and emails the family (edge function "weekly").
   async publishWeekly(pid) {
     const { data, error } = await this.sb.functions.invoke('weekly', { body: { mode: 'publish', pid } });
+    if (error) throw error;
+    if (data && data.error) throw new Error(data.error);
+    return data;
+  },
+
+  // Emails a stored file as an attachment (edge function "send-file"; it checks the sender may read the file).
+  async sendFile({ ref, title, file, to, note }) {
+    const { data, error } = await this.sb.functions.invoke('send-file', { body: { path: ref.slice(2), title, ext: file, to, note } });
     if (error) throw error;
     if (data && data.error) throw new Error(data.error);
     return data;

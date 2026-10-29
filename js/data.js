@@ -12,7 +12,7 @@ const TODAY = (() => {
 
 const SPACES = ['מטבח', 'סלון', 'פינת אוכל', 'חדר הורים', 'חדרי ילדים', 'חדרי רחצה', 'שירותי אורחים', 'מרפסת', 'גינה', 'שטחים כלליים'];
 
-const PLAN_CATEGORIES = ['כתב כמויות', 'אדריכלות', 'הריסה', 'בנייה', 'חשמל', 'תאורה', 'אינסטלציה', 'מיזוג', 'ריצוף וחיפויים', 'נגרות', 'מטבח', 'תקרות', 'אלומיניום', 'חוץ / גינה', 'שונות'];
+const PLAN_CATEGORIES = ['כתב כמויות', 'הריסה', 'בניה', 'העמדה', 'חשמל', 'אינסטלציה', 'הנמכות תקרה', 'ריהוט', 'אלומיניום', 'מסגרות'];
 
 const BUDGET_CATEGORIES = ['ביצוע ושיפוץ', 'מטבח', 'נגרות', 'ריצוף וחיפויים', 'סניטריה', 'תאורה', 'חשמל', 'מיזוג', 'אלומיניום', 'ריהוט', 'מוצרי חשמל', 'טקסטיל ווילונות', 'גינה וחוץ', 'מערכות חכמות', 'דקורציה ואקססוריז', 'בעלי מקצוע', 'שונות'];
 
@@ -68,54 +68,58 @@ function seedData() {
     ],
 
     plans: [
-      { id: 'pl1', cat: 'חשמל', title: 'תכנית חשמל – קומת קרקע וקומה א׳', status: 'pending', versions: [
+      { id: 'pl1', cat: 'חשמל', title: 'תכנית חשמל – קומת קרקע וקומה א׳', status: 'pending', exec: 'draft', versions: [
         { v: 4, date: '2026-10-12', by: 'דנה לוין', note: 'הוספת שקעים באי המטבח ונקודת טעינה לרכב', file: 'PDF', size: '3.2MB' },
         { v: 3, date: '2026-07-02', by: 'דנה לוין', note: 'התאמה לתכנית מיזוג', file: 'PDF', size: '3.0MB' },
         { v: 2, date: '2026-05-20', by: 'דנה לוין', note: '', file: 'PDF', size: '2.8MB' },
         { v: 1, date: '2026-02-18', by: 'דנה לוין', note: 'גרסה ראשונה', file: 'PDF', size: '2.6MB' }] },
-      { id: 'pl2', cat: 'תאורה', title: 'תכנית תאורה וגופי תאורה', status: 'pending', versions: [
+      { id: 'pl2', cat: 'חשמל', title: 'תכנית תאורה וגופי תאורה', status: 'pending', exec: 'draft', versions: [
         { v: 3, date: '2026-10-09', by: 'דנה לוין', note: 'פסי LED בתקרת הסלון ותאורה תלויה מעל פינת האוכל', file: 'PDF', size: '2.1MB' },
         { v: 2, date: '2026-06-14', by: 'דנה לוין', note: '', file: 'PDF', size: '2.0MB' },
         { v: 1, date: '2026-02-22', by: 'דנה לוין', note: '', file: 'PDF', size: '1.8MB' }] },
-      { id: 'pl3', cat: 'אדריכלות', title: 'תכנית העמדה ומידות – כל הקומות', status: 'approved', versions: [
+      { id: 'pl3', cat: 'העמדה', title: 'תכנית העמדה ומידות – כל הקומות', status: 'approved', exec: 'approved', execBy: 'חורחה עברין', execAt: '2026-09-01', versions: [
         { v: 6, date: '2026-04-28', by: 'דנה לוין', note: 'גרסה מאושרת לביצוע', file: 'DWG', size: '5.4MB' },
         { v: 5, date: '2026-03-30', by: 'דנה לוין', note: '', file: 'DWG', size: '5.3MB' },
         { v: 4, date: '2026-02-26', by: 'דנה לוין', note: '', file: 'PDF', size: '4.9MB' }] },
-      { id: 'pl4', cat: 'כתב כמויות', title: 'כתב כמויות לביצוע', status: 'approved', versions: [
+      { id: 'pl4', cat: 'כתב כמויות', title: 'כתב כמויות לביצוע', status: 'approved', exec: 'approved', execBy: 'חורחה עברין', execAt: '2026-09-01', versions: [
         { v: 3, date: '2026-03-10', by: 'חורחה עברין', note: 'עדכון לאחר הריסה', file: 'XLS', size: '0.4MB' },
         { v: 2, date: '2026-02-27', by: 'חורחה עברין', note: '', file: 'XLS', size: '0.4MB' }] },
-      { id: 'pl5', cat: 'הריסה', title: 'תכנית הריסה ובינוי', status: 'approved', versions: [
+      { id: 'pl5', cat: 'הריסה', title: 'תכנית הריסה ובינוי', status: 'approved', exec: 'approved', execBy: 'חורחה עברין', execAt: '2026-09-01', versions: [
         { v: 2, date: '2026-02-24', by: 'דנה לוין', note: '', file: 'PDF', size: '1.6MB' },
         { v: 1, date: '2026-02-12', by: 'דנה לוין', note: '', file: 'PDF', size: '1.5MB' }] },
-      { id: 'pl6', cat: 'בנייה', title: 'תכנית בנייה – קירות וחדירות', status: 'approved', versions: [
+      { id: 'pl6', cat: 'בניה', title: 'תכנית בנייה – קירות וחדירות', status: 'approved', exec: 'approved', execBy: 'חורחה עברין', execAt: '2026-09-01', versions: [
         { v: 3, date: '2026-03-25', by: 'דנה לוין', note: '', file: 'PDF', size: '2.2MB' }] },
-      { id: 'pl7', cat: 'אינסטלציה', title: 'תכנית אינסטלציה ונקודות מים', status: 'approved', versions: [
+      { id: 'pl7', cat: 'אינסטלציה', title: 'תכנית אינסטלציה ונקודות מים', status: 'approved', exec: 'approved', execBy: 'חורחה עברין', execAt: '2026-09-01', versions: [
         { v: 3, date: '2026-05-05', by: 'דנה לוין', note: 'הזזת ניקוז מקלחת הורים', file: 'PDF', size: '1.9MB' },
         { v: 2, date: '2026-03-18', by: 'דנה לוין', note: '', file: 'PDF', size: '1.8MB' }] },
-      { id: 'pl8', cat: 'מיזוג', title: 'תכנית מיזוג – מיני מרכזי', status: 'approved', versions: [
+      { id: 'pl8', cat: 'מיזוג', title: 'תכנית מיזוג – מיני מרכזי', status: 'approved', exec: 'approved', execBy: 'חורחה עברין', execAt: '2026-09-01', versions: [
         { v: 2, date: '2026-05-12', by: 'יועץ מיזוג', note: '', file: 'PDF', size: '1.4MB' }] },
-      { id: 'pl9', cat: 'ריצוף וחיפויים', title: 'פריסת ריצוף וחיפויי קירות', status: 'approved', versions: [
+      { id: 'pl9', cat: 'ריצוף וחיפויים', title: 'פריסת ריצוף וחיפויי קירות', status: 'approved', exec: 'approved', execBy: 'חורחה עברין', execAt: '2026-09-01', versions: [
         { v: 2, date: '2026-06-30', by: 'דנה לוין', note: 'הוספת חיפוי קיר באמבטיית הורים', file: 'PDF', size: '2.6MB' }] },
-      { id: 'pl10', cat: 'נגרות', title: 'נגרות – ארונות, ספרייה ונישות', status: 'approved', versions: [
+      { id: 'pl10', cat: 'ריהוט', title: 'נגרות – ארונות, ספרייה ונישות', status: 'approved', exec: 'approved', execBy: 'חורחה עברין', execAt: '2026-09-01', versions: [
         { v: 4, date: '2026-08-21', by: 'דנה לוין', note: '', file: 'PDF', size: '3.7MB' },
         { v: 3, date: '2026-07-15', by: 'דנה לוין', note: '', file: 'PDF', size: '3.5MB' }] },
-      { id: 'pl11', cat: 'מטבח', title: 'מטבח – חזיתות, אי ופריסה', status: 'approved', versions: [
+      { id: 'pl11', cat: 'ריהוט', title: 'מטבח – חזיתות, אי ופריסה', status: 'approved', exec: 'approved', execBy: 'חורחה עברין', execAt: '2026-09-01', versions: [
         { v: 5, date: '2026-06-18', by: 'מטבחי אלון', note: 'אושר וחתום', file: 'PDF', size: '4.1MB' }] },
-      { id: 'pl12', cat: 'תקרות', title: 'תקרות מונמכות וקרניזים', status: 'approved', versions: [
+      { id: 'pl12', cat: 'הנמכות תקרה', title: 'תקרות מונמכות וקרניזים', status: 'approved', exec: 'approved', execBy: 'חורחה עברין', execAt: '2026-09-01', versions: [
         { v: 2, date: '2026-07-08', by: 'דנה לוין', note: '', file: 'PDF', size: '1.2MB' }] },
-      { id: 'pl13', cat: 'אלומיניום', title: 'פתחים ואלומיניום', status: 'approved', versions: [
+      { id: 'pl13', cat: 'אלומיניום', title: 'פתחים ואלומיניום', status: 'approved', exec: 'approved', execBy: 'חורחה עברין', execAt: '2026-09-01', versions: [
         { v: 1, date: '2026-04-02', by: 'קליל פרו', note: '', file: 'PDF', size: '1.1MB' }] },
-      { id: 'pl14', cat: 'חוץ / גינה', title: 'פיתוח חוץ ומרפסת', status: 'new', versions: [
+      { id: 'pl15', cat: 'מסגרות', title: 'מסגרות – מעקה מדרגות ושער כניסה', status: 'new', exec: 'draft', versions: [
+        { v: 1, date: '2026-10-11', by: 'דנה לוין', note: 'גרסה ראשונה', file: 'PDF', size: '1.3MB' }] },
+      { id: 'pl14', cat: 'פיתוח חוץ', title: 'פיתוח חוץ ומרפסת', status: 'new', exec: 'draft', versions: [
         { v: 1, date: '2026-10-14', by: 'דנה לוין', note: 'סקיצה ראשונה להתייחסות', file: 'PDF', size: '2.4MB' }] },
     ],
 
+    planCategories: ['מיזוג', 'ריצוף וחיפויים', 'פיתוח חוץ'],
+
     materials: [
-      { id: 'm1', name: 'אריח קיר', cat: 'ריצוף וחיפויים', space: 'חדרי רחצה', maker: 'Porcelanosa', model: 'Bottega Caliza', sku: '45821', color: 'Sand', supplier: 'נגב קרמיקה', price: 280, unit: 'מ"ר', link: 'https://www.porcelanosa.com', warranty: '10 שנים', notes: 'אמבטיית הורים, קיר מקלחת עד התקרה', status: 'הוזמן', swatch: '#d9cbb4' },
+      { id: 'm1', name: 'אריח קיר', cat: 'ריצוף וחיפויים', space: 'חדרי רחצה', maker: 'Porcelanosa', model: 'Bottega Caliza', sku: '45821', color: 'Sand', supplier: 'נגב קרמיקה', price: 280, unit: 'מ"ר', link: 'https://www.porcelanosa.com', warranty: '10 שנים', notes: 'אמבטיית הורים, קיר מקלחת עד התקרה', status: 'הוזמן', swatch: '#d9cbb4', contactName: 'שרון לוי', contactPhone: '052-4433221', order: { name: 'הזמנה 7781 – נגב קרמיקה.pdf', type: 'PDF', date: '2026-09-15' }, invoice: { name: 'חשבונית 20931 – נגב קרמיקה.pdf', type: 'PDF', date: '2026-09-17' } },
       { id: 'm2', name: 'ריצוף פורצלן 60×120', cat: 'ריצוף וחיפויים', space: 'סלון', maker: 'Marazzi', model: 'Grande Stone', sku: 'M0ZG', color: 'Greige', supplier: 'נגב קרמיקה', price: 245, unit: 'מ"ר', link: '', warranty: '10 שנים', notes: 'גם במטבח ובמסדרון', status: 'סופק', swatch: '#b9b1a5' },
       { id: 'm3', name: 'פרקט עץ אלון', cat: 'ריצוף וחיפויים', space: 'חדר הורים', maker: 'Kährs', model: 'Oak Nouveau', sku: 'K-151', color: 'Natural Matt', supplier: 'עץ הפרקט', price: 390, unit: 'מ"ר', link: '', warranty: '25 שנים', notes: 'גם בחדרי הילדים', status: 'הותקן', img: 'assets/img/j-58.jpg' },
       { id: 'm4', name: 'חזיתות מטבח', cat: 'מטבח', space: 'מטבח', maker: 'מטבחי אלון', model: 'Fenix NTM', sku: 'FX-0720', color: 'Grigio Londra', supplier: 'מטבחי אלון', price: null, unit: '', link: '', warranty: '7 שנים', notes: 'ידיות שקועות, ציר טריקה שקטה', status: 'הוזמן', img: 'assets/img/j-35.jpg' },
       { id: 'm5', name: 'משטח שיש קוורץ', cat: 'מטבח', space: 'מטבח', maker: 'קיסר', model: '5143', sku: '5143-20', color: 'White Attica', supplier: 'שיש הגליל', price: null, unit: '', link: 'https://www.caesarstone.co.il', warranty: '25 שנים', notes: 'עובי 2 ס"מ, אי עם נפילה לרצפה', status: 'נמדד', swatch: '#ece9e4' },
-      { id: 'm6', name: 'ברז מטבח נשלף', cat: 'סניטריה', space: 'מטבח', maker: 'Hansgrohe', model: 'Talis M54', sku: '72808000', color: 'כרום', supplier: 'אלוני סניטריה', price: 1850, unit: 'יח׳', link: '', warranty: '5 שנים', notes: '', status: 'הוזמן', swatch: '#c6cbd1' },
+      { id: 'm6', name: 'ברז מטבח נשלף', cat: 'סניטריה', space: 'מטבח', maker: 'Hansgrohe', model: 'Talis M54', sku: '72808000', color: 'כרום', supplier: 'אלוני סניטריה', price: 1850, unit: 'יח׳', link: '', warranty: '5 שנים', notes: '', status: 'הוזמן', swatch: '#c6cbd1', contactName: 'אבי אלוני', contactPhone: '054-7788990' },
       { id: 'm7', name: 'ברז אמבטיה עומד', cat: 'סניטריה', space: 'חדרי רחצה', maker: 'Hansgrohe', model: '', sku: '', color: '', supplier: 'אלוני סניטריה', price: null, unit: '', link: '', warranty: '', notes: 'ממתין לבחירה בין שתי אפשרויות', status: 'ממתין לבחירה', swatch: '#e7e3dc' },
       { id: 'm8', name: 'אסלה תלויה', cat: 'סניטריה', space: 'שירותי אורחים', maker: 'Duravit', model: 'ME by Starck', sku: '2529090000', color: 'לבן', supplier: 'אלוני סניטריה', price: 2400, unit: 'יח׳', link: '', warranty: '10 שנים', notes: 'כולל מושב טריקה שקטה', status: 'סופק', swatch: '#f4f3ef' },
       { id: 'm9', name: 'מנורות תלויות', cat: 'תאורה', space: 'פינת אוכל', maker: 'Flos', model: 'IC Lights S1', sku: 'F3175059', color: 'פליז', supplier: 'קמחי תאורה', price: 3200, unit: 'יח׳', link: '', warranty: '2 שנים', notes: '3 יחידות מעל השולחן', status: 'הוזמן', img: 'assets/img/t-110.jpg' },
@@ -126,6 +130,10 @@ function seedData() {
       { id: 'm14', name: 'מקלחון ויטרינה', cat: 'סניטריה', space: 'חדרי רחצה', maker: 'זכוכית הדר', model: 'Walk-in', sku: '', color: 'שקוף, פרופיל שחור', supplier: 'זכוכית הדר', price: 4800, unit: 'יח׳', link: '', warranty: '3 שנים', notes: 'ימדד לאחר החיפוי', status: 'נבחר', img: 'assets/img/j-49.jpg' },
       { id: 'm15', name: 'דק עץ', cat: 'גינה וחוץ', space: 'מרפסת', maker: 'Ipe', model: '', sku: '', color: 'טבעי', supplier: 'עץ הפרקט', price: null, unit: '', link: '', warranty: '', notes: 'ממתין לתכנית פיתוח', status: 'ממתין לבחירה', swatch: '#8a6a4c' },
       { id: 'm16', name: 'מיטה זוגית מרופדת', cat: 'ריהוט', space: 'חדר הורים', maker: 'Natuzzi', model: 'Ludovico', sku: '', color: 'פשתן', supplier: 'נטוצי ישראל', price: null, unit: '', link: '', warranty: '', notes: '', status: 'נבחר', img: 'assets/img/j-43.jpg' },
+      { id: 'm17', name: 'מערכת מיזוג מיני מרכזי', cat: 'מיזוג', space: 'שטחים כלליים', maker: 'Tadiran', model: 'Mini Central 3 יח׳', sku: '', color: '', supplier: 'אוויר טק', price: null, unit: '', link: '', warranty: '3 שנים', warrantyUntil: '2029-08-15', notes: '', status: 'הותקן', swatch: '#e6e9ee', contactName: 'רן גולן', contactPhone: '053-1234567', invoice: { name: 'חשבונית אוויר טק.pdf', type: 'PDF', date: '2026-08-15' } },
+      { id: 'm18', name: 'מקרר', cat: 'מוצרי חשמל', space: 'מטבח', maker: 'Samsung', model: 'Bespoke 4 דלתות', sku: 'RF65', color: 'Satin Beige', supplier: 'מחסני חשמל', price: 14900, unit: 'יח׳', link: '', warranty: '', warrantyUntil: '2028-01-10', notes: '', status: 'סופק', swatch: '#d8cdbb' },
+      { id: 'm19', name: 'מדיח כלים', cat: 'מוצרי חשמל', space: 'מטבח', maker: 'Bosch', model: 'Serie 6 אינטגרלי', sku: 'SMV6', color: '', supplier: 'מחסני חשמל', price: 3900, unit: 'יח׳', link: '', warranty: '', warrantyUntil: '2027-01-05', notes: 'מוצג לדוגמה: נשארו פחות מ־3 חודשים', status: 'הותקן', swatch: '#cfd3d8' },
+      { id: 'm20', name: 'כיריים אינדוקציה', cat: 'מוצרי חשמל', space: 'מטבח', maker: 'Miele', model: 'KM 7564', sku: '', color: 'שחור', supplier: 'מחסני חשמל', price: 8200, unit: 'יח׳', link: '', warranty: '', warrantyUntil: '2028-03-01', notes: '', status: 'סופק', swatch: '#2f3134' },
     ],
 
     // Each expense lives once and feeds finance, materials, suppliers and documents.
@@ -183,12 +191,12 @@ function seedData() {
     ],
 
     updates: [
-      { id: 'u1', date: '2026-10-13', title: 'הגמרים בקומה העליונה', stage: 'עבודות גמר', desc: 'הריצוף בקומה העליונה הושלם, ושכבת הצבע הראשונה כבר על הקירות. חדר ההורים מקבל את צורתו הסופית.', photos: ['assets/img/j-43.jpg', 'assets/img/j-28.jpg', 'assets/img/j-8.jpg', 'assets/img/j-22.jpg', 'assets/img/j-1.jpg'] },
-      { id: 'u2', date: '2026-10-06', title: 'התחלנו בהתקנת הנגרות', stage: 'נגרות', desc: 'הגיעו גופי הארונות לחדרי הילדים. הספרייה בסלון עדיין בייצור.', photos: ['assets/img/j-63.jpg', 'assets/img/j-55.jpg'] },
-      { id: 'u3', date: '2026-09-24', title: 'חיפוי אמבטיית ההורים', stage: 'עבודות גמר', desc: 'אריחי Porcelanosa בגוון Sand הותקנו על קיר המקלחת עד התקרה.', photos: ['assets/img/j-49.jpg', 'assets/img/j-40.jpg'] },
-      { id: 'u4', date: '2026-08-04', title: 'תשתיות הושלמו', stage: 'תשתיות', desc: 'חשמל, אינסטלציה ומיזוג. כל הבדיקות עברו בהצלחה.', photos: ['assets/img/before-4.jpg', 'assets/img/j-31.jpg'] },
-      { id: 'u5', date: '2026-06-08', title: 'סיום שלב הבנייה', stage: 'בנייה', desc: 'הקירות החדשים עומדים והפתחים מוכנים לאלומיניום.', photos: ['assets/img/before-1.jpg', 'assets/img/j-33.jpg'] },
-      { id: 'u6', date: '2026-03-02', title: 'לפני שמתחילים', stage: 'לפני', desc: 'תיעוד מצב קיים לפני ההריסה.', photos: ['assets/img/before-living.jpg', 'assets/img/before-kitchen.jpg', 'assets/img/before-2.jpg', 'assets/img/before-3.jpg', 'assets/img/before-bath.jpg'] },
+      { id: 'u1', date: '2026-10-13', title: 'הגמרים בקומה העליונה', stage: 'עבודות גמר', stages: ['טיח וצבע', 'ריצוף וחיפויים'], desc: 'הריצוף בקומה העליונה הושלם, ושכבת הצבע הראשונה כבר על הקירות. חדר ההורים מקבל את צורתו הסופית.', photos: ['assets/img/j-43.jpg', 'assets/img/j-28.jpg', 'assets/img/j-8.jpg', 'assets/img/j-22.jpg', 'assets/img/j-1.jpg'] },
+      { id: 'u2', date: '2026-10-06', title: 'התחלנו בהתקנת הנגרות', stage: 'נגרות', stages: ['נגרות'], desc: 'הגיעו גופי הארונות לחדרי הילדים. הספרייה בסלון עדיין בייצור.', photos: ['assets/img/j-63.jpg', 'assets/img/j-55.jpg'] },
+      { id: 'u3', date: '2026-09-24', title: 'חיפוי אמבטיית ההורים', stage: 'עבודות גמר', stages: ['ריצוף וחיפויים'], desc: 'אריחי Porcelanosa בגוון Sand הותקנו על קיר המקלחת עד התקרה.', photos: ['assets/img/j-49.jpg', 'assets/img/j-40.jpg'] },
+      { id: 'u4', date: '2026-08-04', title: 'תשתיות הושלמו', stage: 'תשתיות', stages: ['אינסטלציה', 'חשמל', 'מיזוג אוויר'], desc: 'חשמל, אינסטלציה ומיזוג. כל הבדיקות עברו בהצלחה.', photos: ['assets/img/before-4.jpg', 'assets/img/j-31.jpg'] },
+      { id: 'u5', date: '2026-06-08', title: 'סיום שלב הבנייה', stage: 'בנייה', stages: ['בנייה'], desc: 'הקירות החדשים עומדים והפתחים מוכנים לאלומיניום.', photos: ['assets/img/before-1.jpg', 'assets/img/j-33.jpg'] },
+      { id: 'u6', date: '2026-03-02', title: 'לפני שמתחילים', stage: 'לפני', stages: ['לפני'], desc: 'תיעוד מצב קיים לפני ההריסה.', photos: ['assets/img/before-living.jpg', 'assets/img/before-kitchen.jpg', 'assets/img/before-2.jpg', 'assets/img/before-3.jpg', 'assets/img/before-bath.jpg'] },
     ],
 
     documents: [
@@ -255,6 +263,12 @@ function seedData() {
       { when: '2026-09-20 12:00', who: 'מיכל אדרי', what: 'עדכנה תשלום: תחילת עבודות גמר ₪89,000' },
     ],
 
+    todos: [
+      { id: 'td1', title: 'לבחור ידיות לארונות המטבח', desc: 'שלוש אפשרויות באולם התצוגה של מטבחי אלון', owner: 'נועה אברהמי', due: '2026-10-20', done: false },
+      { id: 'td2', title: 'להזמין וילונות לחדר ההורים', desc: 'למדוד אחרי הצבע', owner: 'אורי אברהמי', due: '2026-11-05', done: false },
+      { id: 'td3', title: 'לפנות את המחסן לפני הריצוף', desc: '', owner: 'אורי אברהמי', due: '2026-10-01', done: true },
+    ],
+
     weeklySummaries: [
       { id: 'w2', week: '2026-10-16', status: 'draft', done: ['הריצוף בקומה העליונה הושלם', 'הגיעו גופי הארונות לחדרי הילדים', 'הועלתה תכנית החשמל המעודכנת (גרסה 4)'], next: ['התקנת הארונות בחדרי הילדים', 'שכבת צבע שנייה בקומה העליונה', 'מחכה לאישור שלכם: תכנית החשמל ותכנית התאורה'] },
       { id: 'w1', week: '2026-10-09', status: 'sent', approvedBy: 'חורחה עברין', sentAt: '2026-10-09T17:00:00', done: ['חיפוי הקיר באמבטיית ההורים הותקן', 'התחלנו בהתקנת הנגרות', 'הועלתה תכנית התאורה (גרסה 3)'], next: ['סיום הריצוף בקומה העליונה', 'הגעת גופי הארונות לחדרי הילדים', 'אישור תכנית התאורה לפני הזמנת הגופים'] },
@@ -293,7 +307,7 @@ function emptyProjectData({ name = '', family = '', address = '', client = '', s
     },
     team: team || JSON.parse(JSON.stringify(TEAM)),
     members, timeline, plans: [], materials: [], expenses: [], categoryBudgets: {}, casaMilestones: [], changes: [],
-    updates: [], documents: [], pros: [], tickets: [], tasks: [], notifications: [], audit: [], portfolio: [], weeklySummaries: [],
+    updates: [], documents: [], pros: [], tickets: [], tasks: [], notifications: [], audit: [], portfolio: [], weeklySummaries: [], todos: [], planCategories: [],
   };
 }
 

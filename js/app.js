@@ -12,7 +12,7 @@ const CLIENT_NAV = [
   ['pros', 'pros', 'בעלי מקצוע'],
   ['service', 'service', 'שירות ואחריות'],
 ];
-const CLIENT_EXTRA = [['tasks', 'tasks', 'משימות ואישורים'], ['notifications', 'bell', 'התראות']];
+const CLIENT_EXTRA = [['todo', 'check', 'המטלות שלי'], ['tasks', 'tasks', 'משימות ואישורים'], ['notifications', 'bell', 'התראות']];
 const CLIENT_TABS = [['home', 'home', 'ראשי'], ['plans', 'plans', 'תכניות'], ['photos', 'photos', 'תמונות'], ['finance', 'finance', 'כספים']];
 
 const STAFF_NAV = [
@@ -303,7 +303,7 @@ function shellView(page, view, staff) {
     ? `<div class="nav-group">BACK OFFICE</div><nav>${STAFF_NAV.map((n) => navLink(n, page)).join('')}</nav>`
     : `<nav>${CLIENT_NAV.map((n) => navLink(n, page)).join('')}</nav>
        <div class="nav-group">רכיבים רוחביים</div>
-       <nav>${navLink(CLIENT_EXTRA[0], page, tasks)}${navLink(CLIENT_EXTRA[1], page, unread)}</nav>`;
+       <nav>${navLink(CLIENT_EXTRA[0], page)}${navLink(CLIENT_EXTRA[1], page, tasks)}${navLink(CLIENT_EXTRA[2], page, unread)}</nav>`;
   const who = Store.live ? currentUserName() : staff ? TEAM.pm.name : 'אורי אברהמי';
   return `
   <div class="shell">

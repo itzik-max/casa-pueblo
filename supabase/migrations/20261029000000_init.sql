@@ -8,6 +8,7 @@ create table if not exists public.profiles (
   email text,
   full_name text,
   is_staff boolean not null default false,
+  is_admin boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -15,8 +16,17 @@ create table if not exists public.profiles (
 create table if not exists public.staff_emails (
   email text primary key check (email = lower(email)),
   name text,
+  admin boolean not null default false,  -- מאשר תכניות לביצוע ומנהל קטגוריות (חורחה)
   added_at timestamptz not null default now()
 );
+
+insert into public.staff_emails (email, name, admin) values ('casapueblo.ji@gmail.com', 'חורחה עברין', true), ('ozitzik@gmail.com', 'איציק עוז', false)
+on conflict (email) do nothing;
+
+create or replace function public.is_admin() returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((select is_admin from profiles where id = auth.uid()), false);
+$$;
 
 create or replace function public.is_staff() returns boolean
 language sql stable security definer set search_path = public as $$
@@ -75,8 +85,9 @@ create index if not exists audit_log_project_at on public.audit_log (project_id,
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
-  insert into profiles (id, email, is_staff)
-  values (new.id, lower(new.email), exists (select 1 from staff_emails where email = lower(new.email)))
+  insert into profiles (id, email, is_staff, is_admin)
+  values (new.id, lower(new.email), exists (select 1 from staff_emails where email = lower(new.email)),
+          coalesce((select admin from staff_emails where email = lower(new.email)), false))
   on conflict (id) do nothing;
 
   insert into project_members (project_id, user_id, role)
@@ -96,15 +107,15 @@ language plpgsql security definer set search_path = public as $$
 begin
   if tg_op = 'DELETE' then
     if old.email = lower(coalesce(auth.jwt() ->> 'email', '')) then raise exception 'cannot remove yourself from staff'; end if;
-    update profiles set is_staff = false where email = old.email;
+    update profiles set is_staff = false, is_admin = false where email = old.email;
     return old;
   end if;
-  update profiles set is_staff = true where email = new.email;
+  update profiles set is_staff = true, is_admin = new.admin where email = new.email;
   return new;
 end $$;
 
 drop trigger if exists staff_emails_sync on public.staff_emails;
-create trigger staff_emails_sync after insert or delete on public.staff_emails
+create trigger staff_emails_sync after insert or update or delete on public.staff_emails
   for each row execute function public.sync_staff();
 
 -- ---------- RLS ----------
@@ -160,6 +171,18 @@ begin
 
   if not is_staff() then
     if changed && protected then raise exception 'clients cannot change: %', array_to_string(changed, ', '); end if;
+  end if;
+
+  -- סטטוס ביצוע של תכנית וקטגוריות התכניות: רק חורחה (is_admin). תכנית חדשה או גרסה חדשה נכנסת כטיוטה.
+  if not is_admin() then
+    if (cur.data -> 'planCategories') is distinct from (new_data -> 'planCategories') then raise exception 'only the plan approver can change plan categories'; end if;
+    if exists (
+      select 1 from jsonb_array_elements(coalesce(new_data -> 'plans', '[]')) n
+      left join jsonb_array_elements(coalesce(cur.data -> 'plans', '[]')) o on o ->> 'id' = n ->> 'id'
+      where (o is null and coalesce(n ->> 'exec', 'draft') <> 'draft')
+         or (o is not null and (n -> 'exec') is distinct from (o -> 'exec')
+             and not (coalesce(n ->> 'exec', 'draft') = 'draft' and (n #> '{versions,0,v}') is distinct from (o #> '{versions,0,v}')))
+    ) then raise exception 'only the plan approver can change a plan status'; end if;
   end if;
 
   update projects set

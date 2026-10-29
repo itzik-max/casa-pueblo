@@ -1,6 +1,6 @@
 /* Shared UI helpers: state, formatting, icons, modal, toast, tooltip. */
 
-const STORE_KEY = 'casa-portal-demo-v5';
+const STORE_KEY = 'casa-portal-demo-v6';
 const LIVE_SESSION_KEY = 'casa-live-session';
 
 const Store = {
@@ -48,6 +48,12 @@ const Store = {
     this.data.notifications.unshift({ id: 'n' + Date.now(), text, when: `${TODAY} ${pad(now.getHours())}:${pad(now.getMinutes())}`, read: false, link });
   },
 };
+
+// Plan execution status and plan categories: Jorge only (profiles.is_admin in the real system).
+function canApprovePlans() {
+  if (Store.live) return !!(Live.user && Live.user.admin);
+  return !!(Store.session && Store.session.role === 'staff');
+}
 
 function currentUserName() {
   if (Store.live && Live.user) return Live.user.name;

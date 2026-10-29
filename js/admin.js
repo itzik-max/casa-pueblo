@@ -7,6 +7,7 @@ function formModal({ title, intro = '', fields, submit = 'שמירה', onSave })
     if (f.type === 'textarea') return `<label class="field"><span>${esc(f.label)}</span><textarea class="input" name="${f.id}" placeholder="${esc(f.placeholder || '')}">${esc(v)}</textarea></label>`;
     if (f.type === 'checkbox') return `<label class="check"><input type="checkbox" name="${f.id}" ${v ? 'checked' : ''}><span>${esc(f.label)}</span></label>`;
     if (f.type === 'range') return `<label class="field"><span>${esc(f.label)}: <b id="rv-${f.id}">${v}%</b></span><input type="range" name="${f.id}" min="0" max="100" value="${v}" style="width:100%;accent-color:var(--navy)" oninput="document.getElementById('rv-${f.id}').textContent=this.value+'%'"></label>`;
+    if (f.type === 'checks') return `<fieldset class="field checks"><span>${esc(f.label)}</span><div class="chips-input">${f.options.map((o) => `<label><input type="checkbox" name="${f.id}" value="${esc(o)}" ${(f.value || []).includes(o) ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}</div></fieldset>`;
     if (f.type === 'file') return `<label class="field"><span>${esc(f.label)}</span><input class="input" type="file" name="${f.id}" ${f.multiple ? 'multiple' : ''} accept="${f.accept || ''}"></label>`;
     return `<label class="field"><span>${esc(f.label)}</span><input class="input" type="${f.type || 'text'}" name="${f.id}" value="${esc(v)}" placeholder="${esc(f.placeholder || '')}"></label>`;
   };
@@ -18,6 +19,7 @@ function formModal({ title, intro = '', fields, submit = 'שמירה', onSave })
       el.querySelector('#fm-save').onclick = async () => {
         const vals = {};
         fields.forEach((f) => {
+          if (f.type === 'checks') { vals[f.id] = [...el.querySelectorAll(`[name="${f.id}"]:checked`)].map((x) => x.value); return; }
           const inp = el.querySelector(`[name="${f.id}"]`);
           vals[f.id] = f.type === 'checkbox' ? inp.checked : f.type === 'file' ? inp.files : f.type === 'number' || f.type === 'range' ? Number(inp.value) : inp.value.trim();
         });
@@ -258,7 +260,7 @@ const ACTIONS = {
     formModal({
       title: 'העלאת תכנית חדשה',
       fields: [
-        { id: 'cat', label: 'קטגוריה', type: 'select', options: PLAN_CATEGORIES },
+        { id: 'cat', label: 'קטגוריה', type: 'select', options: planCategories(Store.data) },
         { id: 'title', label: 'שם התכנית', required: true },
         { id: 'file', label: 'קובץ', type: 'file', accept: '.pdf,.dwg,.dwf,.xls,.xlsx,image/*' },
         { id: 'approve', label: 'לבקש אישור מהלקוח', type: 'checkbox', value: true },
@@ -268,7 +270,7 @@ const ACTIONS = {
         const f = v.file[0];
         const path = await storeFile(f);
         const id = 'pl' + Date.now();
-        Store.data.plans.unshift({ id, cat: v.cat, title: v.title, status: v.approve ? 'pending' : 'new', versions: [{ v: 1, date: TODAY, by: TEAM.architect.name, note: 'גרסה ראשונה', path, file: f ? f.name.split('.').pop().toUpperCase().slice(0, 4) : 'PDF', size: f ? (f.size / 1048576).toFixed(1) + 'MB' : '—' }] });
+        Store.data.plans.unshift({ id, cat: v.cat, title: v.title, status: v.approve ? 'pending' : 'new', exec: 'draft', versions: [{ v: 1, date: TODAY, by: TEAM.architect.name, note: 'גרסה ראשונה', path, file: f ? f.name.split('.').pop().toUpperCase().slice(0, 4) : 'PDF', size: f ? (f.size / 1048576).toFixed(1) + 'MB' : '—' }] });
         if (v.approve) Store.data.tasks.unshift({ id: 'k' + Date.now(), type: 'approval', title: `אישור ${v.title} V1`, sub: `ביקשה ${TEAM.architect.name} · ${fmtDateShort(TODAY)}`, ref: { page: 'plans', id }, level: 'red', done: false });
         Store.log(`העלה תכנית ${v.cat}: ${v.title} V1${v.approve ? ' וביקש אישור' : ''}`, TEAM.architect.name);
         Store.notify(`נוספה תכנית חדשה: ${v.title}`, 'plans');
@@ -296,6 +298,7 @@ const ACTIONS = {
         p.versions.unshift({ v: nv, date: TODAY, by: Store.live ? currentUserName() : TEAM.architect.name, note: v.note, path,
           file: f ? f.name.split('.').pop().toUpperCase().slice(0, 4) : p.versions[0].file, size: f ? (f.size / 1048576).toFixed(1) + 'MB' : p.versions[0].size });
         p.status = v.approve ? 'pending' : 'new';
+        p.exec = 'draft'; // a new version waits for Jorge's approval for execution
         if (v.approve) {
           Store.data.tasks.forEach((t) => { if (t.ref && t.ref.id === p.id) t.done = true; });
           Store.data.tasks.unshift({ id: 'k' + Date.now(), type: 'approval', title: `אישור ${p.title} V${nv}`, sub: `${v.note} · ${fmtDateShort(TODAY)}`, ref: { page: 'plans', id: p.id }, level: 'red', done: false });
@@ -344,32 +347,13 @@ const ACTIONS = {
       },
     });
   },
-  material() {
-    formModal({
-      title: 'הוספת חומר / פריט',
-      fields: [
-        { id: 'name', label: 'שם', required: true },
-        { id: 'space', label: 'חלל', type: 'select', options: SPACES },
-        { id: 'cat', label: 'קטגוריה', type: 'select', options: BUDGET_CATEGORIES },
-        { id: 'maker', label: 'יצרן' }, { id: 'model', label: 'דגם' }, { id: 'sku', label: 'מק״ט' }, { id: 'color', label: 'גוון' },
-        { id: 'supplier', label: 'ספק' }, { id: 'price', label: 'מחיר (לא חובה)', type: 'number' }, { id: 'warranty', label: 'אחריות' },
-        { id: 'status', label: 'סטטוס', type: 'select', options: Object.keys(MATERIAL_STATUS) },
-        { id: 'notes', label: 'הערות', type: 'textarea' },
-      ],
-      onSave(v) {
-        Store.data.materials.push({ id: 'm' + Date.now(), ...v, price: v.price || null, unit: '', link: '', swatch: '#d8cfc0' });
-        Store.log(`הוסיף חומר: ${v.name} (${v.space})`, TEAM.architect.name);
-        Store.save();
-        return 'הפריט נוסף לחומרים ובחירות';
-      },
-    });
-  },
+  material() { materialForm(); },
   photos() {
     formModal({
       title: 'עדכון תמונות ליומן',
       fields: [
         { id: 'title', label: 'כותרת', required: true },
-        { id: 'stage', label: 'שלב', type: 'select', options: ['לפני', ...Store.data.timeline.map((s) => s.name)], value: Store.data.project.stage },
+        { id: 'stages', label: 'שלבי בנייה (אפשר כמה)', type: 'checks', options: PHOTO_STAGES, value: [] },
         { id: 'desc', label: 'תיאור קצר', type: 'textarea' },
         { id: 'files', label: 'תמונות (מהנייד או מהמחשב)', type: 'file', multiple: true, accept: 'image/*' },
       ],
@@ -383,7 +367,7 @@ const ACTIONS = {
           for (const f of [...v.files].slice(0, 6)) { const src = await readImage(f); if (src) photos.push(src); }
           if (!photos.length) photos = ['assets/img/j-28.jpg', 'assets/img/j-31.jpg'];
         }
-        Store.data.updates.unshift({ id: 'u' + Date.now(), date: TODAY, title: v.title, stage: v.stage, desc: v.desc, photos });
+        Store.data.updates.unshift({ id: 'u' + Date.now(), date: TODAY, title: v.title, stage: v.stages[0] || Store.data.project.stage, stages: v.stages.length ? v.stages : [Store.data.project.stage], desc: v.desc, photos });
         Store.log(`העלה ${photos.length} תמונות: ${v.title}`, TEAM.pm.name);
         Store.notify(`נוספו ${photos.length} תמונות חדשות מהפרויקט`, 'photos');
         Store.save();
@@ -440,7 +424,7 @@ const ACTIONS = {
       fields: [
         { id: 'cat', label: 'תחום', type: 'select', options: PRO_CATEGORIES },
         { id: 'name', label: 'שם', required: true }, { id: 'company', label: 'חברה' },
-        { id: 'phone', label: 'טלפון', type: 'tel', required: true }, { id: 'warranty', label: 'אחריות עד (חודש)', type: 'month' },
+        { id: 'phone', label: 'טלפון', type: 'tel', required: true },
         { id: 'note', label: 'הערה' },
       ],
       onSave(v) {

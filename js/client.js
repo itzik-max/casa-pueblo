@@ -351,34 +351,66 @@ Pages.project = () => {
 };
 
 /* ---------- תכניות ---------- */
-function openPlan(id) {
+// Execution status of a plan: only Jorge (plan approver) sets it.
+const EXEC_STATUS = { approved: ['green', 'מאושר לביצוע'], draft: ['gray', 'טיוטה'] };
+function execPill(p) { const s = EXEC_STATUS[p.exec || 'draft']; return pill(s[0], s[1]); }
+function planCategories(d) { return [...PLAN_CATEGORIES, ...(d.planCategories || []).filter((c) => !PLAN_CATEGORIES.includes(c))]; }
+
+function setPlanExec(plan, exec) {
+  plan.exec = exec;
+  plan.execBy = currentUserName();
+  plan.execAt = TODAY;
+  Store.log(`סימן את ${plan.title} V${plan.versions[0].v} כ"${EXEC_STATUS[exec][1]}"`);
+  if (exec === 'approved') Store.notify(`${plan.title} אושרה לביצוע`, 'plans');
+  Store.save();
+}
+
+function openPlan(id, vi = 0) {
   const plan = Store.data.plans.find((p) => p.id === id);
-  const v = plan.versions[0];
+  const v = plan.versions[vi];
+  const current = vi === 0;
   const seed = Number(id.replace(/\D/g, '')) || 1;
   Store.log(`צפה ב-${plan.title} V${v.v}`);
   Store.save();
+  const approver = canApprovePlans();
   openModal({
     title: `${plan.title} · V${v.v}`,
     wide: true,
     body: `
-      <div class="split" style="margin-bottom:12px;flex-wrap:wrap">
+      <div class="split" style="margin-bottom:12px;flex-wrap:wrap;gap:8px">
         <div class="small ink-2">${esc(plan.cat)} · הועלתה ${fmtDate(v.date)} ע״י ${esc(v.by)} · ${v.file} ${v.size}</div>
-        ${statusPill(plan.status)}
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${current ? execPill(plan) : pill('gray', 'גרסה קודמת')}${current && plan.status === 'pending' ? statusPill('pending') : ''}</div>
       </div>
+      ${current && approver ? `<div class="exec-box">
+        <span class="small"><b>סטטוס התכנית</b> (רק חורחה יכול לשנות)</span>
+        <div class="seg" role="group" aria-label="סטטוס התכנית">
+          <button type="button" data-exec="approved" aria-pressed="${plan.exec === 'approved'}">מאושר לביצוע</button>
+          <button type="button" data-exec="draft" aria-pressed="${plan.exec !== 'approved'}">טיוטה</button>
+        </div>
+        ${plan.execBy ? `<span class="xs muted">עודכן ע״י ${esc(plan.execBy)} · ${fmtDate(plan.execAt)}</span>` : ''}
+      </div>` : ''}
       <div class="plan-viewer">${planPreview(v) || planSketch(plan.title, v.v, seed)}</div>
       ${v.note ? `<div class="tl-note">מה השתנה בגרסה: ${esc(v.note)}</div>` : ''}
       <h3 style="margin:18px 0 4px;font-size:15px;color:var(--navy)">היסטוריית גרסאות</h3>
       <p class="small muted" style="margin:0 0 6px">גרסאות קודמות לא נמחקות, ותמיד אפשר לחזור אליהן.</p>
       <ul class="version-list">
-        ${plan.versions.map((x, i) => `<li><span class="v">V${x.v}</span><span class="d">${fmtDate(x.date)} · ${esc(x.by)}${x.note ? ` · ${esc(x.note)}` : ''}</span>${i === 0 ? pill('blue', 'נוכחית') : `<button class="btn btn-sm btn-quiet" data-ver="${i}">צפייה</button>`}</li>`).join('')}
+        ${plan.versions.map((x, i) => `<li><span class="v">V${x.v}</span><span class="d">${fmtDate(x.date)} · ${esc(x.by)}${x.note ? ` · ${esc(x.note)}` : ''}</span>${i === vi ? pill('blue', i === 0 ? 'נוכחית' : 'מוצגת') : `<button class="btn btn-sm btn-quiet" data-ver="${i}">צפייה</button>`}</li>`).join('')}
       </ul>`,
-    foot: `${plan.status === 'pending' ? `<button class="btn btn-primary" id="pv-approve">${icon('check')}לאישור התכנית</button>` : ''}
+    foot: `${current && plan.status === 'pending' ? `<button class="btn btn-primary" id="pv-approve">${icon('check')}לאישור התכנית</button>` : ''}
+      ${shareButtons()}
       <button class="btn btn-ghost" id="pv-dl">${icon('download')}הורדה</button>`,
     onOpen(el) {
       const a = el.querySelector('#pv-approve');
       if (a) a.onclick = () => { closeModal(); approvePlanFlow(id); };
+      el.querySelectorAll('[data-exec]').forEach((b) => (b.onclick = () => {
+        setPlanExec(plan, b.dataset.exec);
+        closeModal();
+        toast(`הסטטוס עודכן: ${EXEC_STATUS[b.dataset.exec][1]}`);
+        App.render();
+      }));
+      bindShare(el, { title: `${plan.title} · גרסה ${v.v}`, ref: v.path, file: v.file });
       el.querySelector('#pv-dl').onclick = () => { if (!openFile(v.path)) toast('בגרסה המלאה יורד כאן קובץ התכנית'); };
-      el.querySelectorAll('[data-ver]').forEach((b) => (b.onclick = () => { if (!openFile(plan.versions[+b.dataset.ver].path)) toast('לגרסה הזאת אין קובץ במערכת'); }));
+      el.querySelectorAll('[data-ver]').forEach((b) => (b.onclick = () => { closeModal(); openPlan(id, +b.dataset.ver); }));
     },
   });
 }
@@ -392,41 +424,78 @@ function planPreview(v) {
   return '';
 }
 
+function addPlanCategoryFlow() {
+  openModal({
+    title: 'קטגוריית תכניות חדשה',
+    body: `<label class="field"><span>שם הקטגוריה</span><input class="input" id="pc-name" placeholder="למשל: פיתוח חוץ"></label>`,
+    foot: `<button class="btn btn-primary" id="pc-save">${icon('plus')}הוספה</button>`,
+    onOpen(el) {
+      setTimeout(() => el.querySelector('#pc-name').focus(), 50);
+      el.querySelector('#pc-save').onclick = () => {
+        const name = el.querySelector('#pc-name').value.trim();
+        if (!name) return;
+        const d = Store.data;
+        if (planCategories(d).includes(name)) return toast('הקטגוריה כבר קיימת');
+        d.planCategories = [...(d.planCategories || []), name];
+        Store.log(`הוסיף קטגוריית תכניות: ${name}`);
+        Store.save();
+        closeModal();
+        App.go('plans', { cat: name });
+      };
+    },
+  });
+}
+
 Pages.plans = (q) => {
   const d = Store.data;
+  const cats = planCategories(d);
   const cat = q.cat || 'הכול';
-  const used = PLAN_CATEGORIES.filter((c) => d.plans.some((p) => p.cat === c));
-  const list = d.plans.filter((p) => cat === 'הכול' || p.cat === cat)
-    .sort((a, b) => (a.status === 'pending' ? -1 : 0) - (b.status === 'pending' ? -1 : 0) || b.versions[0].date.localeCompare(a.versions[0].date));
+  const inCat = (p) => cat === 'הכול' || p.cat === cat;
+  const list = d.plans.filter(inCat)
+    .sort((a, b) => (a.exec === 'approved' ? 0 : 1) - (b.exec === 'approved' ? 0 : 1) || b.versions[0].date.localeCompare(a.versions[0].date));
+  const older = d.plans.filter(inCat).flatMap((p) => p.versions.slice(1).map((v, i) => ({ p, v, i: i + 1 }))).sort((a, b) => b.v.date.localeCompare(a.v.date));
   const pending = d.plans.filter((p) => p.status === 'pending').length;
+  const approver = canApprovePlans();
   return {
     title: 'תכניות',
     html: `
-      <div class="page-head"><div><h1>תכניות</h1><p>כל תכניות הפרויקט במקום אחד, כולל גרסאות קודמות</p></div>
+      <div class="page-head"><div><h1>תכניות</h1><p>התכניות העדכניות למעלה, והגרסאות הקודמות מתחת</p></div>
         ${pending ? pill('red', `${pending} ממתינות לאישורכם`) : ''}</div>
       <div class="chips" role="group" aria-label="סינון לפי קטגוריה">
-        ${['הכול', ...used].map((c) => `<button class="chip" aria-pressed="${c === cat}" data-cat="${esc(c)}">${esc(c)}<span class="n">${c === 'הכול' ? d.plans.length : d.plans.filter((p) => p.cat === c).length}</span></button>`).join('')}
+        ${['הכול', ...cats].map((c) => `<button class="chip" aria-pressed="${c === cat}" data-cat="${esc(c)}">${esc(c === 'הכול' ? 'הכל' : c)}<span class="n">${c === 'הכול' ? d.plans.length : d.plans.filter((p) => p.cat === c).length}</span></button>`).join('')}
+        ${approver ? `<button class="chip" id="pc-add">${icon('plus', 'xs')} קטגוריה</button>` : ''}
       </div>
       <div class="card">
         <ul class="rows">
           ${list.map((p) => {
             const v = p.versions[0];
-            return `<li class="row clickable" data-plan="${p.id}">
+            return `<li class="row clickable ${p.exec === 'approved' ? 'plan-ok' : ''}" data-plan="${p.id}">
               ${fileIco(v.file)}
               <div class="main-col">
                 <div class="title">${esc(p.title)}</div>
-                <div class="sub">${esc(p.cat)} · V${v.v} · ${fmtDate(v.date)}${p.versions.length > 1 ? ` · ${p.versions.length} גרסאות` : ''}</div>
+                <div class="sub">${esc(p.cat)} · גרסה ${v.v} · ${fmtDate(v.date)}</div>
               </div>
-              <div class="end">${statusPill(p.status)}
+              <div class="end">${execPill(p)}${p.status === 'pending' ? statusPill('pending') : ''}
                 ${p.status === 'pending' ? `<button class="btn btn-sm btn-primary" data-approve="${p.id}">לאישור</button>` : ''}</div>
             </li>`;
           }).join('') || '<li class="empty">אין תכניות בקטגוריה זו</li>'}
         </ul>
-      </div>`,
+      </div>
+      ${older.length ? `<div class="section-title" style="margin-top:26px"><h2>גרסאות קודמות</h2><span class="small muted">${older.length} גרסאות שהוחלפו</span></div>
+      <div class="card older-plans"><ul class="rows">
+        ${older.map(({ p, v, i }) => `<li class="row clickable compact" data-old="${p.id}" data-i="${i}">
+          ${fileIco(v.file)}
+          <div class="main-col"><div class="title">${esc(p.title)} · גרסה ${v.v}</div><div class="sub">${esc(p.cat)} · ${fmtDate(v.date)}${v.note ? ` · ${esc(v.note)}` : ''}</div></div>
+          <div class="end">${pill('gray', 'הוחלפה')}</div>
+        </li>`).join('')}
+      </ul></div>` : ''}`,
     mount(root) {
       root.querySelectorAll('[data-cat]').forEach((b) => (b.onclick = () => App.go('plans', { cat: b.dataset.cat })));
       root.querySelectorAll('[data-plan]').forEach((r) => (r.onclick = (e) => { if (!e.target.closest('[data-approve]')) openPlan(r.dataset.plan); }));
+      root.querySelectorAll('[data-old]').forEach((r) => (r.onclick = () => openPlan(r.dataset.old, +r.dataset.i)));
       root.querySelectorAll('[data-approve]').forEach((b) => (b.onclick = () => approvePlanFlow(b.dataset.approve)));
+      const add = root.querySelector('#pc-add');
+      if (add) add.onclick = addPlanCategoryFlow;
       if (q.id) { history.replaceState(null, '', '#/plans'); openPlan(q.id); }
     },
   };
@@ -440,14 +509,21 @@ function isDark(hex) {
 function matVisual(m, cls = 'ph') {
   return m.img ? `<span class="lux ${cls}"><img src="${esc(media(m.img))}" alt="" loading="lazy"></span>` : `<div class="${cls} swatch" style="background-color:${esc(m.swatch || "#ddd")}"><span class="sw-name${isDark(m.swatch) ? " light" : ""}">${esc(m.color || m.name)}</span></div>`;
 }
+const MAT_FILES = [['order', 'הזמנה', 'מסמכי ספקים'], ['invoice', 'חשבונית', 'חשבוניות']];
+
+function waLink(phone, text = '') {
+  const n = String(phone || '').replace(/\D/g, '').replace(/^0/, '');
+  return `https://wa.me/972${n}${text ? '?text=' + encodeURIComponent(text) : ''}`;
+}
+
 function openMaterial(id) {
   const d = Store.data;
   const m = d.materials.find((x) => x.id === id);
   const exp = d.expenses.find((e) => e.material === id);
-  const sup = d.pros.find((p) => p.company === m.supplier);
   const fields = [
     ['קטגוריה', m.cat], ['חלל', m.space], ['יצרן', m.maker], ['דגם', m.model], ['מק״ט', m.sku], ['גוון', m.color],
-    ['ספק', m.supplier], ['מחיר', m.price ? `${ils(m.price)}${m.unit ? ' ל' + m.unit : ''}` : ''], ['אחריות', m.warranty], ['הערות', m.notes],
+    ['ספק', m.supplier], ['מחיר', m.price ? `${ils(m.price)}${m.unit ? ' ל' + m.unit : ''}` : ''],
+    ['אחריות', m.warrantyUntil ? `עד ${fmtDate(m.warrantyUntil)}` : m.warranty], ['הערות', m.notes],
   ].filter(([, v]) => v);
   openModal({
     title: m.name,
@@ -455,19 +531,33 @@ function openMaterial(id) {
       <div style="border-radius:12px;overflow:hidden;margin-bottom:14px">${matVisual(m, 'ph')}</div>
       <div class="split" style="margin-bottom:6px">${matPill(m.status)}${m.link ? `<a class="link-btn small" href="${esc(m.link)}" target="_blank" rel="noopener">${icon('link', 'xs')} קישור למוצר</a>` : ''}</div>
       <dl class="kv">${fields.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
-      ${exp ? `
-      <div class="card card-pad" style="margin-top:14px;background:var(--sand);box-shadow:none">
-        <div class="small muted" style="margin-bottom:6px">${icon('link', 'xs')} אותו פריט מופיע גם ב:</div>
-        <div class="small">כספים ← ${esc(exp.cat)} · <b class="num">${ils(exp.total)}</b> (שולם ${ils(expensePaid(exp))})</div>
-        ${sup ? `<div class="small">בעלי מקצוע ← ${esc(sup.company)}</div>` : ''}
-        <div class="small">מסמכים ← ${esc(exp.doc)}</div>
-      </div>` : ''}
+
+      <h3 class="mt-h">איש קשר</h3>
+      ${m.contactName || m.contactPhone ? `<div class="contact-row">
+        <span class="avatar">${initials(m.contactName || m.supplier || '?')}</span>
+        <div class="main-col"><b>${esc(m.contactName || '—')}</b><div class="small ink-2 ltr">${esc(m.contactPhone || '')}</div></div>
+        ${m.contactPhone ? `<a class="btn btn-sm btn-ghost" href="tel:${esc(m.contactPhone)}">${icon('phone')}התקשרות</a>
+        <a class="btn btn-sm btn-ghost" href="${waLink(m.contactPhone, `שלום, לגבי ${m.name}`)}" target="_blank" rel="noopener">${icon('whatsapp')}וואטסאפ</a>` : ''}
+      </div>` : '<p class="small muted">עוד לא הוזן איש קשר. אפשר להוסיף ב"עריכה".</p>'}
+
+      <h3 class="mt-h">הזמנה וחשבונית</h3>
+      <ul class="rows mat-files">
+        ${MAT_FILES.map(([k, label]) => {
+          const f = m[k];
+          return `<li class="row compact">${fileIco(f ? f.type : 'PDF')}
+            <div class="main-col"><div class="title">${label}</div><div class="sub">${f ? `${esc(f.name)} · ${fmtDate(f.date)}` : 'עוד לא הועלה'}</div></div>
+            <div class="end">${f ? `<button class="btn btn-sm btn-ghost" data-fview="${k}">${icon('eye')}צפייה</button>${shareButtons('sm', k)}` : `<button class="btn btn-sm btn-ghost" data-fup="${k}">${icon('upload')}העלאה</button>`}</div>
+          </li>`;
+        }).join('')}
+      </ul>
+      ${exp ? `<div class="small muted" style="margin-top:10px">${icon('link', 'xs')} מקושר להוצאה בכספים: ${esc(exp.cat)} · <b class="num">${ils(exp.total)}</b></div>` : ''}
       ${m.status === 'ממתין לבחירה' ? `
-        <h3 style="margin:16px 0 8px;font-size:15px;color:var(--navy)">האפשרויות שדנה הציעה</h3>
+        <h3 class="mt-h">האפשרויות שהוצעו</h3>
         <div class="grid sm-2">
           ${['Axor Uno – כרום', 'Axor Uno – ניקל מוברש'].map((o, i) => `<label class="card card-pad check" style="margin:0;box-shadow:none"><input type="radio" name="opt" value="${esc(o)}" ${i === 0 ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}
         </div>` : ''}`,
-    foot: m.status === 'ממתין לבחירה' ? `<button class="btn btn-primary" id="mt-choose">${icon('check')}שמירת הבחירה</button>` : '',
+    foot: `${m.status === 'ממתין לבחירה' ? `<button class="btn btn-primary" id="mt-choose">${icon('check')}שמירת הבחירה</button>` : ''}
+      <button class="btn btn-ghost" id="mt-edit">${icon('edit')}עריכה</button>`,
     onOpen(el) {
       const b = el.querySelector('#mt-choose');
       if (b) b.onclick = () => {
@@ -478,7 +568,64 @@ function openMaterial(id) {
         Store.log(`בחר ${m.name}: ${val}`);
         Store.save();
         closeModal();
-        toast('הבחירה נשמרה ונשלחה לדנה');
+        toast('הבחירה נשמרה');
+        App.render();
+      };
+      el.querySelector('#mt-edit').onclick = () => { closeModal(); materialForm(m); };
+      el.querySelectorAll('[data-fview]').forEach((x) => (x.onclick = () => { if (!openFile(m[x.dataset.fview].path)) toast('בגרסה המלאה הקובץ נפתח כאן'); }));
+      MAT_FILES.forEach(([k, label]) => { if (m[k]) bindShare(el, { title: `${label} · ${m.name}`, ref: m[k].path, file: m[k].type }, k); });
+      el.querySelectorAll('[data-fup]').forEach((x) => (x.onclick = () => { closeModal(); materialForm(m, x.dataset.fup); }));
+    },
+  });
+}
+
+// Add or edit a material. Clients and staff both use it. Order / invoice files also go to "מסמכים".
+function materialForm(m = null, focus = '') {
+  const d = Store.data;
+  const v = m || { name: '', space: SPACES[0], cat: BUDGET_CATEGORIES[0], status: 'נבחר' };
+  const inp = (id, label, type = 'text', extra = '') => `<label class="field"><span>${label}</span><input class="input" name="${id}" type="${type}" value="${esc(v[id] || '')}" ${extra}></label>`;
+  const sel = (id, label, opts) => `<label class="field"><span>${label}</span><select class="input" name="${id}">${opts.map((o) => `<option ${o === v[id] ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select></label>`;
+  openModal({
+    title: m ? `עריכה: ${m.name}` : 'הוספת חומר / מוצר',
+    wide: true,
+    body: `<form id="mf" class="form-grid two">
+      ${inp('name', 'שם הפריט')}${sel('space', 'חלל', SPACES)}
+      ${sel('cat', 'קטגוריה', BUDGET_CATEGORIES)}${sel('status', 'סטטוס', Object.keys(MATERIAL_STATUS))}
+      ${inp('maker', 'יצרן')}${inp('model', 'דגם')}
+      ${inp('color', 'גוון')}${inp('supplier', 'ספק')}
+      ${inp('price', 'מחיר (לא חובה)', 'number', 'inputmode="numeric"')}${inp('warrantyUntil', 'אחריות עד (למוצרים שנרכשו)', 'date')}
+      <div class="form-sub" style="grid-column:1/-1">איש קשר</div>
+      ${inp('contactName', 'שם')}${inp('contactPhone', 'טלפון', 'tel', 'dir="ltr"')}
+      <div class="form-sub" style="grid-column:1/-1">הזמנה וחשבונית</div>
+      ${MAT_FILES.map(([k, label]) => `<label class="field"><span>${label}${v[k] ? ` (יש: ${esc(v[k].name)})` : ''}</span><input class="input" type="file" name="${k}" accept="image/*,application/pdf"></label>`).join('')}
+      <label class="field" style="grid-column:1/-1"><span>הערות</span><textarea class="input" name="notes">${esc(v.notes || '')}</textarea></label>
+    </form><p class="form-hint" id="mf-err" style="color:var(--st-red)"></p>`,
+    foot: `<button class="btn btn-primary" id="mf-save">${icon('check')}שמירה</button><button class="btn btn-ghost" data-close>ביטול</button>`,
+    onOpen(el) {
+      if (focus) setTimeout(() => el.querySelector(`[name="${focus}"]`).focus(), 50);
+      el.querySelector('#mf-save').onclick = async (ev) => {
+        const f = new FormData(el.querySelector('#mf'));
+        const name = String(f.get('name') || '').trim();
+        if (!name) { el.querySelector('#mf-err').textContent = 'צריך שם לפריט'; return; }
+        ev.target.disabled = true;
+        const target = m || { id: 'm' + Date.now(), unit: '', link: '', swatch: '#d8cfc0' };
+        ['name', 'space', 'cat', 'status', 'maker', 'model', 'color', 'supplier', 'warrantyUntil', 'contactName', 'contactPhone', 'notes'].forEach((k) => (target[k] = String(f.get(k) || '').trim()));
+        target.price = Number(f.get('price')) || null;
+        try {
+          for (const [k, label, docCat] of MAT_FILES) {
+            const file = f.get(k);
+            if (!file || !file.size) continue;
+            const path = await storeFile(file);
+            const type = (file.name.split('.').pop() || 'PDF').toUpperCase().slice(0, 4);
+            target[k] = { name: file.name, type, date: TODAY, path };
+            d.documents.unshift({ id: 'd' + Date.now() + k, cat: docCat, title: `${label} – ${name}${target.supplier ? ` (${target.supplier})` : ''}`, date: TODAY, type, size: (file.size / 1048576).toFixed(1) + 'MB', path, material: target.id });
+          }
+        } catch (e) { ev.target.disabled = false; return; }
+        if (!m) d.materials.push(target);
+        Store.log(`${m ? 'עדכן' : 'הוסיף'} חומר: ${name}`);
+        Store.save();
+        closeModal();
+        toast(m ? 'הפריט עודכן' : 'הפריט נוסף לחומרים ובחירות');
         App.render();
       };
     },
@@ -494,10 +641,13 @@ Pages.materials = (q) => {
   return {
     title: 'חומרים ובחירות',
     html: `
-      <div class="page-head"><div><h1>חומרים ובחירות</h1><p>כל מה שנבחר לבית, לפי חלל או לפי קטגוריה</p></div>
-        <div class="seg" role="group" aria-label="תצוגה">
-          <button aria-pressed="${by === 'space'}" data-by="space">לפי חלל</button>
-          <button aria-pressed="${by === 'cat'}" data-by="cat">לפי קטגוריה</button>
+      <div class="page-head"><div><h1>חומרים ובחירות</h1><p>כל מה שנבחר לבית, עם איש קשר, הזמנה וחשבונית לכל פריט</p></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <div class="seg" role="group" aria-label="תצוגה">
+            <button aria-pressed="${by === 'space'}" data-by="space">לפי חלל</button>
+            <button aria-pressed="${by === 'cat'}" data-by="cat">לפי קטגוריה</button>
+          </div>
+          <button class="btn btn-accent" id="mt-add">${icon('plus')}הוספת חומר</button>
         </div>
       </div>
       ${groups.map((g) => {
@@ -511,24 +661,25 @@ Pages.materials = (q) => {
                 <div class="body">
                   <span class="name">${esc(m.name)}</span>
                   <span class="brand">${esc([m.maker, m.color].filter(Boolean).join(' · ') || '—')}</span>
-                  ${matPill(m.status)}
+                  <span class="mat-flags">${matPill(m.status)}${m.invoice ? `<span class="flag" title="יש חשבונית">${icon('receipt', 'xs')}</span>` : ''}${m.contactPhone ? `<span class="flag" title="יש איש קשר">${icon('phone', 'xs')}</span>` : ''}</span>
                 </div>
               </button>`).join('')}
           </div>
         </section>`;
-      }).join('')}`,
+      }).join('') || '<div class="empty">עוד אין חומרים. לוחצים "הוספת חומר".</div>'}`,
     mount(root) {
       root.querySelectorAll('[data-by]').forEach((b) => (b.onclick = () => App.go('materials', { by: b.dataset.by })));
       root.querySelectorAll('[data-mat]').forEach((b) => (b.onclick = () => openMaterial(b.dataset.mat)));
+      root.querySelector('#mt-add').onclick = () => materialForm();
       if (q.id) { history.replaceState(null, '', '#/materials' + (q.by ? '?by=' + q.by : '')); openMaterial(q.id); }
     },
   };
 };
 
 /* ---------- לוח זמנים ---------- */
-Pages.timeline = () => {
-  const d = Store.data;
-  const tl = d.timeline;
+const TL_VIEWS = [['gantt', 'גאנט'], ['path', 'מסלול'], ['months', 'לפי חודשים']];
+
+function tlGantt(tl) {
   const t0 = parseDate(tl[0].ps), t1 = parseDate(tl[tl.length - 1].pe);
   const span = t1 - t0;
   const x = (s) => ((parseDate(s) - t0) / span * 100).toFixed(2);
@@ -537,38 +688,80 @@ Pages.timeline = () => {
     months.push({ pos: ((dt - t0) / span * 100).toFixed(2), label: HEB_MONTHS_SHORT[dt.getMonth()] + (dt.getMonth() === 0 ? ` ${String(dt.getFullYear()).slice(2)}` : '') });
   }
   const todayX = x(TODAY);
+  return `<article class="card card-pad gantt" style="margin-bottom:18px">
+    <div class="gantt-inner">
+      <div class="gantt-months"><div></div><div class="m">${months.map((m) => `<span style="right:${m.pos}%">${m.label}</span>`).join('')}</div></div>
+      ${tl.map((s) => {
+        const aS = s.as || s.ps;
+        const aE = s.ae || (s.status === 'future' ? s.pe : TODAY);
+        const tip = `<b>${esc(s.name)}</b><div class="r"><span>מתוכנן</span><span>${fmtDateShort(s.ps)}–${fmtDateShort(s.pe)}</span></div><div class="r"><span>בפועל</span><span>${s.as ? fmtDateShort(s.as) : '—'}–${s.ae ? fmtDateShort(s.ae) : (s.as ? 'היום' : '—')}</span></div>`;
+        return `<div class="gantt-row">
+          <div>${esc(s.name)}</div>
+          <div class="gantt-track" tabindex="0" data-tip="${esc(tip)}">
+            <i class="gantt-bar plan" style="right:${x(s.ps)}%;width:${(x(s.pe) - x(s.ps)).toFixed(2)}%"></i>
+            ${s.status !== 'future' ? `<i class="gantt-bar ${s.status}" style="right:${x(aS)}%;width:${Math.max(x(aE) - x(aS), 0.6).toFixed(2)}%;top:12px;height:10px"></i>` : ''}
+            <i class="gantt-today" style="right:${todayX}%" aria-hidden="true"></i>
+          </div>
+        </div>`;
+      }).join('')}
+      <div class="small muted" style="margin-top:8px;display:flex;gap:16px;flex-wrap:wrap">
+        <span><i class="sw" style="border:1.5px dashed var(--line-2);vertical-align:middle"></i> תכנון</span>
+        <span><i class="sw" style="background:var(--st-blue);vertical-align:middle"></i> ביצוע בפועל</span>
+        <span><i class="sw" style="background:var(--terra);width:3px;vertical-align:middle"></i> היום</span>
+      </div>
+    </div>
+  </article>`;
+}
+
+// A horizontal journey: one card per stage, the current one raised.
+function tlPath(tl) {
+  return `<div class="tl-path" role="list">
+    ${tl.map((s, i) => {
+      const pct = s.status === 'done' ? 100 : s.status === 'future' ? 0 : Math.round(Math.min(1, Math.max(0, (parseDate(TODAY) - parseDate(s.as || s.ps)) / Math.max(1, parseDate(s.pe) - parseDate(s.as || s.ps)))) * 100);
+      return `<div class="tp-step ${s.status}" role="listitem">
+        <div class="tp-node"><span>${s.status === 'done' ? icon('check') : i + 1}</span></div>
+        <div class="tp-card">
+          <div class="tp-name">${esc(s.name)}</div>
+          <div class="tp-dates">${fmtDateShort(s.ps)} – ${fmtDateShort(s.pe)}</div>
+          ${s.status === 'active' || s.status === 'delay' ? `<div class="progress dark" style="margin-top:8px"><i style="width:${pct}%"></i></div><div class="xs muted" style="margin-top:4px">${pct}% מהזמן המתוכנן</div>` : ''}
+          <div style="margin-top:8px">${statusPill(s.status)}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// Month by month: what is happening in each month.
+function tlMonths(tl) {
+  const t0 = parseDate(tl[0].ps), t1 = parseDate(tl[tl.length - 1].pe);
+  const out = [];
+  for (let dt = new Date(t0.getFullYear(), t0.getMonth(), 1); dt <= t1; dt.setMonth(dt.getMonth() + 1)) {
+    const mStart = new Date(dt), mEnd = new Date(dt.getFullYear(), dt.getMonth() + 1, 0);
+    const items = tl.filter((s) => parseDate(s.ps) <= mEnd && parseDate(s.pe) >= mStart);
+    const now = parseDate(TODAY) >= mStart && parseDate(TODAY) <= mEnd;
+    out.push(`<article class="card tm-card ${now ? 'now' : ''} ${mEnd < parseDate(TODAY) ? 'past' : ''}">
+      <div class="tm-head"><b>${HEB_MONTHS[mStart.getMonth()]}</b><span>${mStart.getFullYear()}</span>${now ? pill('blue', 'החודש') : ''}</div>
+      ${items.map((s) => `<div class="tm-item ${s.status}"><i></i><span>${esc(s.name)}</span></div>`).join('') || '<div class="xs muted">אין שלבים</div>'}
+    </article>`);
+  }
+  return `<div class="tl-months">${out.join('')}</div>`;
+}
+
+Pages.timeline = (q) => {
+  const d = Store.data;
+  const tl = d.timeline;
+  if (!tl.length) return { title: 'לוח זמנים', html: '<div class="page-head"><div><h1>לוח זמנים</h1></div></div><div class="empty">לוח הזמנים עוד לא הוגדר</div>', mount() {} };
+  const view = TL_VIEWS.some(([k]) => k === q.view) ? q.view : (Store.session.tlView || 'gantt');
   return {
     title: 'לוח זמנים',
     html: `
       <div class="page-head"><div><h1>לוח זמנים</h1><p>התכנון מול הביצוע בפועל, שלב אחר שלב</p></div>
-        <div class="legend-status">${statusPill('done')}${statusPill('active')}${statusPill('delay')}${statusPill('future')}</div>
+        <div class="seg" role="group" aria-label="תצוגה">${TL_VIEWS.map(([k, l]) => `<button aria-pressed="${k === view}" data-view="${k}">${l}</button>`).join('')}</div>
       </div>
+      <div class="legend-status" style="margin-bottom:14px">${statusPill('done')}${statusPill('active')}${statusPill('delay')}${statusPill('future')}</div>
+      ${view === 'path' ? tlPath(tl) : view === 'months' ? tlMonths(tl) : tlGantt(tl)}
 
-      <article class="card card-pad gantt" style="margin-bottom:18px">
-        <div class="gantt-inner">
-          <div class="gantt-months"><div></div><div class="m">${months.map((m) => `<span style="right:${m.pos}%">${m.label}</span>`).join('')}</div></div>
-          ${tl.map((s) => {
-            const aS = s.as || s.ps;
-            const aE = s.ae || (s.status === 'future' ? s.pe : (s.status === 'delay' ? TODAY : TODAY));
-            const tip = `<b>${esc(s.name)}</b><div class="r"><span>מתוכנן</span><span>${fmtDateShort(s.ps)}–${fmtDateShort(s.pe)}</span></div><div class="r"><span>בפועל</span><span>${s.as ? fmtDateShort(s.as) : '—'}–${s.ae ? fmtDateShort(s.ae) : (s.as ? 'היום' : '—')}</span></div>`;
-            return `<div class="gantt-row">
-              <div>${esc(s.name)}</div>
-              <div class="gantt-track" tabindex="0" data-tip="${esc(tip)}">
-                <i class="gantt-bar plan" style="right:${x(s.ps)}%;width:${(x(s.pe) - x(s.ps)).toFixed(2)}%"></i>
-                ${s.status !== 'future' ? `<i class="gantt-bar ${s.status}" style="right:${x(aS)}%;width:${Math.max(x(aE) - x(aS), 0.6).toFixed(2)}%;top:12px;height:10px"></i>` : ''}
-                <i class="gantt-today" style="right:${todayX}%" aria-hidden="true"></i>
-              </div>
-            </div>`;
-          }).join('')}
-          <div class="small muted" style="margin-top:8px;display:flex;gap:16px;flex-wrap:wrap">
-            <span><i class="sw" style="border:1.5px dashed var(--line-2);vertical-align:middle"></i> תכנון</span>
-            <span><i class="sw" style="background:var(--st-blue);vertical-align:middle"></i> ביצוע בפועל</span>
-            <span><i class="sw" style="background:var(--terra);width:3px;vertical-align:middle"></i> היום</span>
-          </div>
-        </div>
-      </article>
-
-      <ol class="timeline">
+      <ol class="timeline" style="margin-top:22px">
         ${tl.map((s) => `
           <li class="tl-item ${s.status}">
             <span class="tl-dot">${s.status === 'done' ? icon('check') : s.status === 'delay' ? icon('alert') : ''}</span>
@@ -586,12 +779,13 @@ Pages.timeline = () => {
           </li>`).join('')}
       </ol>`,
     mount(root) {
+      root.querySelectorAll('[data-view]').forEach((b) => (b.onclick = () => { Store.session.tlView = b.dataset.view; Store.save(); App.go('timeline', { view: b.dataset.view }, true); }));
       root.querySelectorAll('.tl-photos img').forEach((i) => (i.onclick = () => openPhoto(i.dataset.src)));
-      // On narrow screens the chart scrolls; start it centred on today.
-      const g = root.querySelector('.gantt');
-      const today = root.querySelector('.gantt-today');
-      if (g.scrollWidth > g.clientWidth && today) {
-        const gr = g.getBoundingClientRect(), tr = today.getBoundingClientRect();
+      // On narrow screens the chart scrolls; start it centred on today (or on the current stage).
+      const g = root.querySelector('.gantt') || root.querySelector('.tl-path');
+      const mark = root.querySelector('.gantt-today') || root.querySelector('.tp-step.active, .tp-step.delay');
+      if (g && mark && g.scrollWidth > g.clientWidth) {
+        const gr = g.getBoundingClientRect(), tr = mark.getBoundingClientRect();
         g.scrollLeft += (tr.left - gr.left) - g.clientWidth / 2;
       }
     },
@@ -622,44 +816,72 @@ function luxImg(src, i, cap = '', sub = '') {
   return `<button class="lux" data-lb="${i}" aria-label="הגדלת תמונה${cap ? ': ' + esc(cap) : ''}"><img src="${esc(media(src))}" alt="" loading="lazy">${cap ? `<span class="cap"><b>${esc(cap)}</b>${esc(sub)}</span>` : ''}</button>`;
 }
 
+// Construction stages a photo can belong to. One update can sit in several (e.g. plumbing, electricity and A/C).
+const PHOTO_STAGES = ['לפני', 'הריסה', 'בנייה', 'אינסטלציה', 'חשמל', 'מיזוג אוויר', 'הנמכות תקרה', 'טיח וצבע', 'ריצוף וחיפויים', 'נגרות', 'אלומיניום', 'מטבח', 'התקנות', 'מסירה'];
+function stagesOf(u) { return u.stages && u.stages.length ? u.stages : [u.stage]; }
+
 Pages.photos = (q) => {
   const d = Store.data;
+  const view = q.view === 'stages' ? 'stages' : 'all';
   const stage = q.stage || 'הכול';
-  const stages = ['הכול', ...new Set(d.updates.map((u) => u.stage))];
-  const list = d.updates.filter((u) => stage === 'הכול' || u.stage === stage);
+  const used = [...PHOTO_STAGES, ...new Set(d.updates.flatMap(stagesOf))].filter((s, i, a) => a.indexOf(s) === i && d.updates.some((u) => stagesOf(u).includes(s)));
+  const list = d.updates.filter((u) => stage === 'הכול' || stagesOf(u).includes(stage));
   const pairIdx = Math.min(Number(q.ba) || 0, BEFORE_AFTER.length - 1);
   const pair = BEFORE_AFTER[pairIdx];
   const all = [];
-  list.forEach((u) => u.photos.forEach((src) => all.push({ src, title: u.title, sub: `${fmtDate(u.date)} · ${u.stage}` })));
   let k = 0;
+  const tile = (u, src) => { all.push({ src, title: u.title, sub: `${fmtDate(u.date)} · ${stagesOf(u).join(', ')}` }); return luxImg(src, k++, u.title, fmtDate(u.date)); };
+
+  const journal = () => `<div class="journal-lux" style="margin-top:18px">
+    ${list.map((u) => {
+      const dt = parseDate(u.date);
+      return `<article class="jentry">
+        <div class="when"><div class="d">${dt.getDate()}</div><div class="m">${HEB_MONTHS[dt.getMonth()]} ${dt.getFullYear()}</div><div class="st">${stagesOf(u).map((s) => pill(s === 'לפני' ? 'gray' : 'blue', s)).join(' ')}</div></div>
+        <div>
+          <h3>${esc(u.title)}</h3>
+          <p>${esc(u.desc)}</p>
+          <div class="mosaic" data-n="${Math.min(u.photos.length, 5)}">${u.photos.map((src) => tile(u, src)).join('')}</div>
+        </div>
+      </article>`;
+    }).join('') || '<div class="empty">עוד אין תמונות</div>'}
+  </div>`;
+
+  // Timeline by construction stage. A photo tagged with several stages shows up in each of them.
+  const byStage = () => `<ol class="photo-stages">
+    ${used.map((s) => {
+      const ups = d.updates.filter((u) => stagesOf(u).includes(s)).sort((a, b) => a.date.localeCompare(b.date));
+      const n = ups.reduce((c, u) => c + u.photos.length, 0);
+      return `<li class="ps-item">
+        <span class="ps-dot"></span>
+        <div class="ps-body">
+          <div class="ps-head"><h3>${esc(s)}</h3><span class="small muted">${n} תמונות · ${fmtDateShort(ups[0].date)}${ups.length > 1 ? `–${fmtDateShort(ups[ups.length - 1].date)}` : ''}</span></div>
+          <div class="ps-strip">${ups.flatMap((u) => u.photos.map((src) => tile(u, src))).join('')}</div>
+        </div>
+      </li>`;
+    }).join('') || '<div class="empty">עוד אין תמונות</div>'}
+  </ol>`;
+
   return {
     title: 'תמונות',
     html: `
-      <div class="page-head"><div><span class="eyebrow">יומן הפרויקט</span><h1>הבית, שלב אחר שלב</h1><p>עדכונים ותמונות מהשטח, לפי תאריך ושלב</p></div></div>
-      <div class="chips" role="group" aria-label="סינון לפי שלב">
-        ${stages.map((s) => `<button class="chip" aria-pressed="${s === stage}" data-stage="${esc(s)}">${esc(s)}</button>`).join('')}
+      <div class="page-head"><div><span class="eyebrow">יומן הפרויקט</span><h1>הבית, שלב אחר שלב</h1><p>עדכונים ותמונות מהשטח, לפי תאריך או לפי שלבי הבנייה</p></div>
+        <div class="seg" role="group" aria-label="תצוגה">
+          <button aria-pressed="${view === 'all'}" data-view="all">הכל</button>
+          <button aria-pressed="${view === 'stages'}" data-view="stages">ציר לפי שלבים</button>
+        </div>
       </div>
-      <div class="journal-lux" style="margin-top:18px">
-        ${list.map((u) => {
-          const dt = parseDate(u.date);
-          return `<article class="jentry">
-            <div class="when"><div class="d">${dt.getDate()}</div><div class="m">${HEB_MONTHS[dt.getMonth()]} ${dt.getFullYear()}</div><div class="st">${pill(u.stage === 'לפני' ? 'gray' : 'blue', u.stage)}</div></div>
-            <div>
-              <h3>${esc(u.title)}</h3>
-              <p>${esc(u.desc)}</p>
-              <div class="mosaic" data-n="${Math.min(u.photos.length, 5)}">${u.photos.map((src) => luxImg(src, k++, u.title, fmtDate(u.date))).join('')}</div>
-            </div>
-          </article>`;
-        }).join('')}
-      </div>
+      ${view === 'all' ? `<div class="chips" role="group" aria-label="סינון לפי שלב">
+        ${['הכול', ...used].map((s) => `<button class="chip" aria-pressed="${s === stage}" data-stage="${esc(s)}">${esc(s === 'הכול' ? 'הכל' : s)}</button>`).join('')}
+      </div>${journal()}` : byStage()}
       <section style="margin-top:64px">
         <div class="page-head" style="margin-bottom:16px"><div><span class="eyebrow">Before &amp; After</span><h1 style="font-size:34px">מה היה, ומה יהיה</h1><p>גררו את הקו כדי להשוות. מתוך פרויקט של קאסה פואבלו ברמת השרון.</p></div></div>
         <div class="ba-tabs">${BEFORE_AFTER.map((p, i) => `<button class="chip" aria-pressed="${i === pairIdx}" data-ba="${i}">${esc(p.name)}</button>`).join('')}</div>
         ${baSlider(pair.before, pair.after)}
       </section>`,
     mount(root) {
+      root.querySelectorAll('[data-view]').forEach((b) => (b.onclick = () => App.go('photos', { view: b.dataset.view })));
       root.querySelectorAll('[data-stage]').forEach((b) => (b.onclick = () => App.go('photos', { stage: b.dataset.stage })));
-      root.querySelectorAll('[data-ba]').forEach((b) => (b.onclick = () => App.go('photos', { stage: q.stage, ba: b.dataset.ba }, true)));
+      root.querySelectorAll('[data-ba]').forEach((b) => (b.onclick = () => App.go('photos', { view: q.view, stage: q.stage, ba: b.dataset.ba }, true)));
       root.querySelectorAll('[data-lb]').forEach((b) => (b.onclick = () => openLightbox(all, Number(b.dataset.lb))));
       bindBA(root);
     },
@@ -684,7 +906,7 @@ Pages.documents = (q) => {
         ${list.map((x) => `<li class="row">
           ${fileIco(x.type)}
           <div class="main-col"><div class="title">${esc(x.title)}</div><div class="sub">${esc(x.cat)} · ${fmtDate(x.date)} · ${x.size}${x.expense ? ' · מקושר להוצאה' : ''}</div></div>
-          <div class="end"><button class="btn btn-sm btn-ghost" data-view="${x.id}">${icon('eye')}צפייה</button><button class="icon-btn" aria-label="הורדה" data-dl="${x.id}">${icon('download')}</button></div>
+          <div class="end"><button class="btn btn-sm btn-ghost" data-view="${x.id}">${icon('eye')}צפייה</button><button class="icon-btn" aria-label="שליחה בוואטסאפ" title="וואטסאפ" data-wa="${x.id}">${icon('whatsapp')}</button><button class="icon-btn" aria-label="שליחה במייל" title="מייל" data-mail="${x.id}">${icon('mail')}</button><button class="icon-btn" aria-label="הורדה" data-dl="${x.id}">${icon('download')}</button></div>
         </li>`).join('')}
       </ul></div>`,
     mount(root) {
@@ -693,6 +915,7 @@ Pages.documents = (q) => {
         const doc = d.documents.find((x) => x.id === (b.dataset.view || b.dataset.dl));
         if (!openFile(doc && doc.path)) toast(Store.live ? 'למסמך הזה לא צורף קובץ' : 'בגרסה המלאה הקובץ נפתח כאן');
       }));
+      list.forEach((x) => bindShare(root, { title: x.title, ref: x.path, file: x.type }, x.id));
       root.querySelector('#doc-up').onclick = () => uploadDocFlow();
     },
   };
@@ -743,7 +966,6 @@ Pages.pros = (q) => {
               <div class="role">${esc(p.cat)}</div>
               <div class="name">${esc(p.name)}</div>
               <div class="co">${esc(p.company)}${p.note ? ` · ${esc(p.note)}` : ''}</div>
-              ${p.warranty ? `<div class="xs muted" style="margin-top:4px">${icon('shield', 'xs')} אחריות עד ${p.warranty.split('-').reverse().join('/')}</div>` : ''}
               <div class="acts">
                 <a class="btn btn-sm btn-primary" href="tel:${p.phone}">${icon('phone')}התקשרות</a>
                 <a class="btn btn-sm btn-ghost" href="https://wa.me/972${p.phone.replace(/\D/g, '').replace(/^0/, '')}" target="_blank" rel="noopener">${icon('whatsapp')}וואטסאפ</a>
@@ -761,13 +983,24 @@ Pages.pros = (q) => {
 };
 
 /* ---------- שירות ואחריות ---------- */
+// Warranty on purchased products only (A/C, fridge, dishwasher, hob...). Casa Pueblo's own work is not listed here.
+// 90 days before the end the family gets an email (supabase/functions/reminders).
+function productWarranties(d) {
+  return d.materials.filter((m) => m.warrantyUntil).map((m) => ({ m, left: daysBetween(TODAY, m.warrantyUntil) })).sort((a, b) => a.left - b.left);
+}
+function warrantyPill(left) {
+  if (left < 0) return pill('gray', 'הסתיימה');
+  if (left <= 90) return pill('yellow', `נשארו ${left} ימים`);
+  return pill('green', 'בתוקף');
+}
+
 Pages.service = () => {
   const d = Store.data;
-  const warranties = d.pros.filter((p) => p.warranty).sort((a, b) => a.warranty.localeCompare(b.warranty));
+  const wr = productWarranties(d);
   return {
     title: 'שירות ואחריות',
     html: `
-      <div class="page-head"><div><h1>שירות ואחריות</h1><p>פניות שירות ותעודות האחריות של הבית</p></div>
+      <div class="page-head"><div><h1>שירות ואחריות</h1><p>פניות שירות, ואחריות על המוצרים שנרכשו לבית</p></div>
         <button class="btn btn-accent" id="tk-new">${icon('plus')}פנייה חדשה</button></div>
       <div class="grid md-2">
         <article class="card">
@@ -778,21 +1011,22 @@ Pages.service = () => {
                 <div class="sub">${fmtDate(t.date)} · ${esc(t.cat)} · ${esc(t.by)}</div>
                 ${t.reply ? `<div class="tl-note" style="margin-top:6px">${esc(t.reply)}</div>` : ''}</div>
               <div class="end">${t.status === 'נסגר' ? pill('green', 'נסגר') : t.status === 'חדש' ? pill('yellow', 'התקבל') : pill('blue', 'בטיפול')}</div>
-            </li>`).join('')}
+            </li>`).join('') || '<li class="empty">אין פניות</li>'}
           </ul>
         </article>
         <article class="card">
-          <div class="card-pad" style="padding-bottom:4px"><h3>אחריות לפי תחום</h3></div>
+          <div class="card-pad" style="padding-bottom:4px"><h3>אחריות על מוצרים</h3>
+            <p class="small muted" style="margin:4px 0 0">3 חודשים לפני שהאחריות מסתיימת נשלח אליכם מייל תזכורת.</p></div>
           <ul class="rows">
-            ${warranties.map((p) => {
-              const [y, m] = p.warranty.split('-');
-              return `<li class="row compact"><div class="main-col"><div class="title">${esc(p.cat)}</div><div class="sub">${esc(p.company)}</div></div>
-                <div class="end small"><b class="num">עד ${m}/${y}</b></div></li>`;
-            }).join('')}
+            ${wr.map(({ m, left }) => `<li class="row compact clickable" data-mat="${m.id}"><div class="main-col"><div class="title">${esc(m.name)}${m.maker ? ` · ${esc(m.maker)}` : ''}</div><div class="sub">אחריות עד ${fmtDate(m.warrantyUntil)}${m.supplier ? ` · ${esc(m.supplier)}` : ''}</div></div>
+              <div class="end">${warrantyPill(left)}</div></li>`).join('') || '<li class="empty">עוד לא הוזנו מוצרים עם אחריות. מוסיפים "אחריות עד" בפריט בחומרים ובחירות.</li>'}
           </ul>
         </article>
       </div>`,
-    mount(root) { root.querySelector('#tk-new').onclick = () => newTicketFlow(); },
+    mount(root) {
+      root.querySelector('#tk-new').onclick = () => newTicketFlow();
+      root.querySelectorAll('[data-mat]').forEach((r) => (r.onclick = () => openMaterial(r.dataset.mat)));
+    },
   };
 };
 function newTicketFlow() {

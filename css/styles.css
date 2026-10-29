@@ -754,3 +754,67 @@ hr.sep { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
 .photo-btn img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
 
 .row-actions .spacer { flex: 1; }
+
+/* ---------- Plans: execution status (Jorge) ---------- */
+.row.plan-ok { box-shadow: inset -4px 0 0 var(--st-green); background: color-mix(in srgb, var(--st-green) 7%, transparent); }
+.older-plans .row { opacity: .72; }
+.older-plans .row:hover { opacity: 1; }
+.exec-box { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+
+/* ---------- Materials: contact, order and invoice ---------- */
+.mt-h { margin: 18px 0 8px; font-size: 15px; }
+.contact-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.contact-row .main-col { flex: 1; min-width: 120px; }
+.mat-files .end { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.mat-flags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mat-flags .flag { color: var(--muted); display: inline-flex; }
+.form-sub { font-size: 12px; letter-spacing: .14em; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; margin-top: 4px; }
+fieldset.field.checks { border: 0; padding: 0; margin: 0 0 14px; }
+fieldset.field.checks > span { display: block; font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
+
+/* ---------- Timeline: path and months views ---------- */
+.tl-path { display: flex; gap: 0; overflow-x: auto; padding: 8px 2px 18px; scroll-snap-type: x proximity; }
+.tp-step { flex: 0 0 190px; position: relative; scroll-snap-align: center; padding-top: 4px; }
+.tp-step::before { content: ""; position: absolute; top: 21px; right: 0; left: 0; height: 2px; background: var(--line-2); }
+.tp-step.done::before { background: var(--st-green); }
+.tp-step:first-child::before { right: 50%; }
+.tp-step:last-child::before { left: 50%; }
+.tp-node { display: flex; justify-content: center; position: relative; }
+.tp-node span { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; background: var(--card); border: 2px solid var(--line-2); color: var(--muted); }
+.tp-node .i { width: 16px; height: 16px; }
+.tp-step.done .tp-node span { background: var(--st-green); border-color: var(--st-green); color: #fff; }
+.tp-step.active .tp-node span { border-color: var(--st-blue); color: var(--st-blue); box-shadow: 0 0 0 5px color-mix(in srgb, var(--st-blue) 18%, transparent); }
+.tp-step.delay .tp-node span { border-color: var(--st-red); color: var(--st-red); box-shadow: 0 0 0 5px color-mix(in srgb, var(--st-red) 18%, transparent); }
+.tp-card { margin: 12px 8px 0; padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--card); text-align: center; }
+.tp-step.active .tp-card, .tp-step.delay .tp-card { transform: translateY(-4px); box-shadow: var(--shadow); }
+.tp-name { font-weight: 600; }
+.tp-dates { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.tl-months { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.tm-card { padding: 14px; }
+.tm-card.past { opacity: .6; }
+.tm-card.now { outline: 2px solid var(--st-blue); }
+.tm-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.tm-head span { color: var(--muted); font-size: 12.5px; }
+.tm-item { display: flex; align-items: center; gap: 8px; font-size: 13.5px; padding: 3px 0; }
+.tm-item i { width: 9px; height: 9px; border-radius: 50%; background: var(--st-gray); flex: none; }
+.tm-item.done i { background: var(--st-green); }
+.tm-item.active i { background: var(--st-blue); }
+.tm-item.delay i { background: var(--st-red); }
+
+/* ---------- Photos by construction stage ---------- */
+.photo-stages { list-style: none; margin: 18px 0 0; padding: 0; position: relative; }
+.photo-stages::before { content: ""; position: absolute; top: 6px; bottom: 6px; right: 7px; width: 2px; background: var(--line-2); }
+.ps-item { position: relative; padding-right: 30px; margin-bottom: 26px; }
+.ps-dot { position: absolute; right: 0; top: 6px; width: 16px; height: 16px; border-radius: 50%; background: var(--terra); box-shadow: 0 0 0 4px var(--card); }
+.ps-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.ps-head h3 { margin: 0; }
+.ps-strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(180px, 240px); gap: 8px; overflow-x: auto; padding-bottom: 6px; }
+.ps-strip .lux { aspect-ratio: 4 / 3; }
+.ps-strip .lux img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------- To-do ---------- */
+.todo-row { align-items: center; }
+.todo-row .main-col { cursor: pointer; }
+.todo-check input { width: 20px; height: 20px; accent-color: var(--st-green); cursor: pointer; }
+.todo-row.is-done .title { text-decoration: line-through; color: var(--muted); }
+.cal-btns { display: flex; gap: 10px; flex-wrap: wrap; }
