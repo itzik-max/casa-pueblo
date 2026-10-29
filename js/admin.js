@@ -210,7 +210,7 @@ const ACTIONS = {
         { id: 'name', label: 'שם הפרויקט', value: p.name, required: true },
         { id: 'address', label: 'כתובת', value: p.address },
         { id: 'handover', label: 'תאריך מסירה משוער', type: 'date', value: p.handover },
-        { id: 'image', label: 'תמונה ראשית', type: 'select', options: [['assets/img/hero-4.jpg', 'סלון'], ['assets/img/hero-1.jpg', 'כניסה'], ['assets/img/hero-5.jpg', 'פינת אוכל'], ['assets/img/j-33.jpg', 'סלון 2']], value: p.image },
+        { id: 'image', label: 'תמונה ראשית', type: 'select', options: [['assets/img/hero-home.svg', 'איור: בית עם חצר'], ['assets/img/hero-4.jpg', 'סלון'], ['assets/img/hero-1.jpg', 'כניסה'], ['assets/img/hero-5.jpg', 'פינת אוכל'], ['assets/img/j-33.jpg', 'סלון 2']], value: p.image },
       ],
       onSave(v) { Object.assign(p, v); Store.log('עדכן את פרטי הפרויקט', TEAM.pm.name); Store.save(); return 'פרטי הפרויקט נשמרו'; },
     });

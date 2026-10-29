@@ -26,7 +26,7 @@ function seedData() {
       name: 'בית אברהמי',
       family: 'אברהמי',
       address: 'רחוב הדקל 14, רמת השרון',
-      image: 'assets/img/hero-4.jpg',
+      image: 'assets/img/hero-home.svg',
       stage: 'עבודות גמר',
       progress: 68,
       start: '2026-03-01',
