@@ -520,6 +520,10 @@ Pages['bo-project'] = () => {
           <div class="card-head"><h3>ממתין ללקוח</h3></div>
           ${open.length ? `<ul class="action-list">${open.map((t) => `<li><span class="ico ${t.level}">${icon('clock')}</span><div class="txt"><b>${esc(t.title)}</b><span>${esc(t.sub)}</span></div></li>`).join('')}</ul>` : '<div class="empty">הלקוח סגר את כל המשימות</div>'}
         </article>
+        ${Store.live ? `<article class="card card-pad" style="grid-column:1/-1">
+          <div class="card-head"><h3>משתמשים בפרויקט</h3><button class="btn btn-sm btn-ghost" id="pm-add">${icon('plus')}הזמנה</button></div>
+          <div id="pm-list"><p class="small muted">טוען…</p></div>
+        </article>` : ''}
         <article class="card card-pad">
           <div class="card-head"><h3>יומן פעילות (Audit Log)</h3><a class="link-btn small" href="#/bo-audit">הכול</a></div>
           <ul class="audit">${d.audit.slice(0, 7).map((a) => `<li><span class="when">${fmtWhen(a.when)}</span><span class="what"><b>${esc(a.who)}</b> ${esc(a.what)}</span></li>`).join('')}</ul>
@@ -528,9 +532,41 @@ Pages['bo-project'] = () => {
     mount(root) {
       root.querySelectorAll('[data-act]').forEach((b) => (b.onclick = () => ACTIONS[b.dataset.act]()));
       root.querySelector('#as-client').onclick = () => { Store.session.view = 'client'; Store.save(); App.go('home'); };
+      if (Store.live) {
+        root.querySelector('#pm-add').onclick = () => ACTIONS.member();
+        fillProjectUsers(root.querySelector('#pm-list'));
+      }
     },
   };
 };
+
+// Who can enter this project: invitations and whether they already signed in.
+async function fillProjectUsers(box) {
+  const pid = Store.data.project.id;
+  const list = await Live.invites(pid);
+  if (!list.length) { box.innerHTML = '<div class="empty">עוד לא הוזמנו משתמשים. לוחצים "הזמנה" ומזינים את המייל של בן המשפחה.</div>'; return; }
+  box.innerHTML = `<ul class="rows">${list.map((m) => `<li class="row">
+    <div class="main-col"><div class="title" dir="ltr" style="text-align:right">${esc(m.email)}</div><div class="sub">${esc(m.role)} · הוזמן ${fmtDate(m.invited_at)}</div></div>
+    <div class="end">${m.accepted_at ? pill('green', 'נכנס למערכת') : pill('yellow', 'עוד לא נכנס')}
+      <button class="btn btn-sm btn-quiet" data-resend="${esc(m.email)}">שליחת קישור</button>
+      <button class="btn btn-sm btn-quiet" data-remove="${esc(m.email)}">הסרה</button></div>
+  </li>`).join('')}</ul>`;
+  box.querySelectorAll('[data-resend]').forEach((b) => (b.onclick = async () => {
+    b.disabled = true;
+    try { await Live.sendLink(b.dataset.resend); toast('קישור כניסה נשלח ל־' + b.dataset.resend); } catch (e) { toast('השליחה נכשלה: ' + e.message); }
+    b.disabled = false;
+  }));
+  box.querySelectorAll('[data-remove]').forEach((b) => (b.onclick = async () => {
+    if (!confirm(`להסיר את ${b.dataset.remove} מהפרויקט? הגישה שלו תיחסם מיד.`)) return;
+    try {
+      await Live.removeMember(pid, b.dataset.remove);
+      Store.data.members = Store.data.members.filter((m) => (m.email || '').toLowerCase() !== b.dataset.remove);
+      Store.log(`הסיר את ${b.dataset.remove} מהפרויקט`);
+      Store.save();
+      fillProjectUsers(box);
+    } catch (e) { toast('ההסרה נכשלה: ' + e.message); }
+  }));
+}
 
 Pages['bo-audit'] = () => ({
   title: 'יומן פעילות',
@@ -614,6 +650,19 @@ async function createLiveProject(f) {
 }
 
 /* ---------- הרשאות ---------- */
+async function fillStaff(box) {
+  const list = await Live.staffList();
+  const me = Live.user.email.toLowerCase();
+  box.innerHTML = `<ul class="rows">${list.map((m) => `<li class="row">
+    <div class="main-col"><div class="title">${esc(m.name || m.email)}</div><div class="sub" dir="ltr" style="text-align:right">${esc(m.email)}</div></div>
+    <div class="end">${m.email === me ? pill('blue', 'זה את/ה') : `<button class="btn btn-sm btn-quiet" data-unstaff="${esc(m.email)}">הסרה</button>`}</div>
+  </li>`).join('')}</ul>`;
+  box.querySelectorAll('[data-unstaff]').forEach((b) => (b.onclick = async () => {
+    if (!confirm(`להסיר את ${b.dataset.unstaff} מהצוות? הגישה ל־Back Office תיחסם מיד.`)) return;
+    try { await Live.removeStaff(b.dataset.unstaff); fillStaff(box); } catch (e) { toast('ההסרה נכשלה: ' + e.message); }
+  }));
+}
+
 Pages['bo-perms'] = () => {
   const roles = ['Admin', 'מנהל פרויקט', 'עובד / מעצבת', 'לקוח', 'בעל מקצוע / ספק'];
   const Y = '<span class="perm-yes">✓</span>', P = '<span class="perm-part">חלקי</span>', N = '<span class="perm-no">—</span>';
@@ -636,6 +685,16 @@ Pages['bo-perms'] = () => {
     title: 'הרשאות',
     html: `
       <div class="page-head"><div><h1>הרשאות לפי תפקיד</h1><p>Role Based Permissions. לקוח ובעל מקצוע רואים רק את הפרויקט שלהם.</p></div></div>
+      ${Store.live ? `<article class="card card-pad" style="margin-bottom:14px">
+        <div class="card-head"><h3>צוות קאסה פואבלו</h3></div>
+        <p class="small ink-2" style="margin-top:0">מי שברשימה נכנס ל־Back Office ורואה את כל הפרויקטים. הכניסה עם המייל שכאן.</p>
+        <div id="st-list"><p class="small muted">טוען…</p></div>
+        <form id="st-add" class="form-grid two" style="margin-top:12px;align-items:end">
+          <label class="field"><span>שם</span><input class="input" name="name" required></label>
+          <label class="field"><span>אימייל</span><input class="input" name="email" type="email" dir="ltr" required></label>
+          <div><button class="btn btn-primary" type="submit">${icon('plus')}הוספה לצוות</button></div>
+        </form>
+      </article>` : ''}
       <article class="card"><div class="table-wrap"><table class="t perm-table">
         <thead><tr><th>יכולת</th>${roles.map((r) => `<th>${r}</th>`).join('')}</tr></thead>
         <tbody>${rows.map((r) => `<tr><td>${r[0]}</td>${r.slice(1).map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
@@ -656,6 +715,22 @@ Pages['bo-perms'] = () => {
             <li>טיוטות שעוד לא פורסמו</li>
           </ul></article>
       </div>`,
-    mount() {},
+    mount(root) {
+      if (!Store.live) return;
+      fillStaff(root.querySelector('#st-list'));
+      root.querySelector('#st-add').onsubmit = async (e) => {
+        e.preventDefault();
+        const f = new FormData(e.target);
+        const email = String(f.get('email')).trim().toLowerCase();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return toast('צריך מייל תקין');
+        try {
+          await Live.addStaff(email, String(f.get('name')).trim());
+          await Live.sendLink(email);
+          toast(`${f.get('name')} נוסף לצוות וקיבל קישור כניסה`);
+          e.target.reset();
+          fillStaff(root.querySelector('#st-list'));
+        } catch (ex) { toast('ההוספה נכשלה: ' + ex.message); }
+      };
+    },
   };
 };

@@ -90,6 +90,23 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- הוספה או הסרה של מייל מרשימת הצוות מעדכנת מיד את ההרשאה של מי שכבר נרשם.
+create or replace function public.sync_staff() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'DELETE' then
+    if old.email = lower(coalesce(auth.jwt() ->> 'email', '')) then raise exception 'cannot remove yourself from staff'; end if;
+    update profiles set is_staff = false where email = old.email;
+    return old;
+  end if;
+  update profiles set is_staff = true where email = new.email;
+  return new;
+end $$;
+
+drop trigger if exists staff_emails_sync on public.staff_emails;
+create trigger staff_emails_sync after insert or delete on public.staff_emails
+  for each row execute function public.sync_staff();
+
 -- ---------- RLS ----------
 alter table public.profiles enable row level security;
 alter table public.staff_emails enable row level security;

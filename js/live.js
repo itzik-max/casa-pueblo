@@ -125,6 +125,21 @@ const Live = {
     return data || [];
   },
 
+  async staffList() {
+    const { data } = await this.sb.from('staff_emails').select('email, name, added_at').order('added_at');
+    return data || [];
+  },
+
+  async addStaff(email, name) {
+    const { error } = await this.sb.from('staff_emails').insert({ email: email.toLowerCase(), name });
+    if (error) throw error;
+  },
+
+  async removeStaff(email) {
+    const { error } = await this.sb.from('staff_emails').delete().eq('email', email);
+    if (error) throw error;
+  },
+
   async auditLog(pid) {
     const { data } = await this.sb.from('audit_log').select('actor_email, action, detail, at').eq('project_id', pid).order('at', { ascending: false }).limit(200);
     return data || [];
