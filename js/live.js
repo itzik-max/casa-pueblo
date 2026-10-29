@@ -68,7 +68,7 @@ const Live = {
         id: r.id, name: r.name, client: p.client || `משפחת ${r.family || ''}`, city: (p.address || '').split(',').pop().trim() || '—',
         pm: (d.team && d.team.pm && d.team.pm.name) || '—', stage: p.stage || '—', progress: p.progress || 0,
         openTasks: tasks.length, pendingApprovals: tasks.filter((t) => t.type === 'approval').length,
-        schedule: p.progress >= 100 ? 'done' : late ? 'delay' : 'ok', alerts: late ? 1 : 0, img: p.image || 'assets/img/hero-home.svg',
+        schedule: p.progress >= 100 ? 'done' : late ? 'delay' : 'ok', alerts: late ? 1 : 0, img: p.image || 'assets/img/hero-home.jpg',
       };
     });
   },

@@ -238,7 +238,7 @@ const ACTIONS = {
         { id: 'address', label: 'כתובת', value: p.address },
         { id: 'handover', label: 'תאריך מסירה משוער', type: 'date', value: p.handover },
         ...(Store.live ? [{ id: 'imgfile', label: 'תמונה ראשית חדשה (לא חובה)', type: 'file', accept: 'image/*' }] : []),
-        { id: 'image', label: 'תמונה ראשית', type: 'select', options: [...(String(p.image).startsWith('f:') ? [[p.image, 'התמונה שהועלתה']] : []), ['assets/img/hero-home.svg', 'איור: בית עם חצר'], ['assets/img/hero-4.jpg', 'סלון'], ['assets/img/hero-1.jpg', 'כניסה'], ['assets/img/hero-5.jpg', 'פינת אוכל'], ['assets/img/j-33.jpg', 'סלון 2']], value: p.image },
+        { id: 'image', label: 'תמונה ראשית', type: 'select', options: [...(String(p.image).startsWith('f:') ? [[p.image, 'התמונה שהועלתה']] : []), ['assets/img/hero-home.jpg', 'בית עם חצר'], ['assets/img/hero-4.jpg', 'סלון'], ['assets/img/hero-1.jpg', 'כניסה'], ['assets/img/hero-5.jpg', 'פינת אוכל'], ['assets/img/j-33.jpg', 'סלון 2']], value: p.image },
       ],
       onSave(v) {
         return withUpload(async () => {
@@ -590,7 +590,7 @@ Pages['bo-new'] = () => ({
         <label class="field"><span>לקוח ראשי – אימייל / טלפון</span><input class="input" name="c1c"></label>
         <label class="field"><span>לקוח נוסף – שם</span><input class="input" name="c2"></label>
         <label class="field"><span>לקוח נוסף – אימייל / טלפון</span><input class="input" name="c2c"></label>
-        <label class="field"><span>מנהל פרויקט</span><select class="input" name="pm"><option>רועי מזרחי</option><option>עדי פרידמן</option></select></label>
+        <label class="field"><span>מנהל פרויקט</span><select class="input" name="pm"><option>חורחה עברין</option><option>עדי פרידמן</option></select></label>
         <label class="field"><span>אדריכלית / מעצבת</span><select class="input" name="arch"><option>דנה לוין</option><option>שני ברק</option></select></label>
         <label class="field"><span>תאריך התחלה</span><input class="input" type="date" name="start" value="${TODAY}"></label>
         <label class="field"><span>תאריך יעד</span><input class="input" type="date" name="end"></label>

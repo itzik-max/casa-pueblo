@@ -21,7 +21,7 @@ const DOC_CATEGORIES = ['הסכם התקשרות', 'הצעת מחיר', 'מפר�
 const PRO_CATEGORIES = ['נגר', 'חשמלאי', 'אינסטלטור', 'מיזוג', 'מטבח', 'שיש', 'אלומיניום', 'פרקט', 'תאורה', 'זכוכית', 'גינון', 'בית חכם'];
 
 const TEAM = {
-  pm: { name: 'רועי מזרחי', role: 'מנהל פרויקט', phone: '050-7123456', email: 'roi@casa-pueblo.co.il' },
+  pm: { name: 'חורחה עברין', role: 'מנהל פרויקט', phone: '050-7123456', email: 'jorge@casa-pueblo.co.il' },
   architect: { name: 'דנה לוין', role: 'אדריכלית ומעצבת', phone: '052-6654321', email: 'dana@casa-pueblo.co.il' },
   office: { name: 'מיכל אדרי', role: 'הנהלת חשבונות', phone: '09-7654321', email: 'office@casa-pueblo.co.il' },
 };
@@ -33,7 +33,7 @@ function seedData() {
       name: 'בית אברהמי',
       family: 'אברהמי',
       address: 'רחוב הדקל 14, רמת השרון',
-      image: 'assets/img/hero-home.svg',
+      image: 'assets/img/hero-home.jpg',
       stage: 'עבודות גמר',
       progress: 68,
       start: '2026-03-01',
@@ -82,8 +82,8 @@ function seedData() {
         { v: 5, date: '2026-03-30', by: 'דנה לוין', note: '', file: 'DWG', size: '5.3MB' },
         { v: 4, date: '2026-02-26', by: 'דנה לוין', note: '', file: 'PDF', size: '4.9MB' }] },
       { id: 'pl4', cat: 'כתב כמויות', title: 'כתב כמויות לביצוע', status: 'approved', versions: [
-        { v: 3, date: '2026-03-10', by: 'רועי מזרחי', note: 'עדכון לאחר הריסה', file: 'XLS', size: '0.4MB' },
-        { v: 2, date: '2026-02-27', by: 'רועי מזרחי', note: '', file: 'XLS', size: '0.4MB' }] },
+        { v: 3, date: '2026-03-10', by: 'חורחה עברין', note: 'עדכון לאחר הריסה', file: 'XLS', size: '0.4MB' },
+        { v: 2, date: '2026-02-27', by: 'חורחה עברין', note: '', file: 'XLS', size: '0.4MB' }] },
       { id: 'pl5', cat: 'הריסה', title: 'תכנית הריסה ובינוי', status: 'approved', versions: [
         { v: 2, date: '2026-02-24', by: 'דנה לוין', note: '', file: 'PDF', size: '1.6MB' },
         { v: 1, date: '2026-02-12', by: 'דנה לוין', note: '', file: 'PDF', size: '1.5MB' }] },
@@ -246,22 +246,22 @@ function seedData() {
 
     audit: [
       { when: '2026-10-14 16:20', who: 'דנה לוין', what: 'העלתה תכנית פיתוח חוץ V1' },
-      { when: '2026-10-13 18:05', who: 'רועי מזרחי', what: 'העלה 3 תמונות ליומן הפרויקט' },
-      { when: '2026-10-13 09:30', who: 'רועי מזרחי', what: 'עדכן את הסיכום השבועי' },
+      { when: '2026-10-13 18:05', who: 'חורחה עברין', what: 'העלה 3 תמונות ליומן הפרויקט' },
+      { when: '2026-10-13 09:30', who: 'חורחה עברין', what: 'עדכן את הסיכום השבועי' },
       { when: '2026-10-12 13:42', who: 'דנה לוין', what: 'העלתה תכנית חשמל V4 וביקשה אישור' },
       { when: '2026-10-12 15:04', who: 'אורי אברהמי', what: 'צפה בתכנית חשמל V4' },
       { when: '2026-10-09 11:10', who: 'דנה לוין', what: 'העלתה תכנית תאורה V3 וביקשה אישור' },
-      { when: '2026-10-08 10:00', who: 'רועי מזרחי', what: 'הוסיף שינוי #3 – נישה מוארת בסלון' },
+      { when: '2026-10-08 10:00', who: 'חורחה עברין', what: 'הוסיף שינוי #3 – נישה מוארת בסלון' },
       { when: '2026-09-20 12:00', who: 'מיכל אדרי', what: 'עדכנה תשלום: תחילת עבודות גמר ₪89,000' },
     ],
 
     // Back-office portfolio (other families shown only to staff)
     portfolio: [
-      { id: 'p-avrahami', name: 'בית אברהמי', client: 'אורי ונועה אברהמי', city: 'רמת השרון', pm: 'רועי מזרחי', stage: 'עבודות גמר', progress: 68, openTasks: 5, pendingApprovals: 3, schedule: 'delay', alerts: 1, img: 'assets/img/hero-4.jpg' },
-      { id: 'p-shalev', name: 'דירת שליו', client: 'משפחת שליו', city: 'תל אביב', pm: 'רועי מזרחי', stage: 'תשתיות', progress: 41, openTasks: 2, pendingApprovals: 1, schedule: 'ok', alerts: 0, img: 'assets/img/hero-1.jpg' },
+      { id: 'p-avrahami', name: 'בית אברהמי', client: 'אורי ונועה אברהמי', city: 'רמת השרון', pm: 'חורחה עברין', stage: 'עבודות גמר', progress: 68, openTasks: 5, pendingApprovals: 3, schedule: 'delay', alerts: 1, img: 'assets/img/hero-4.jpg' },
+      { id: 'p-shalev', name: 'דירת שליו', client: 'משפחת שליו', city: 'תל אביב', pm: 'חורחה עברין', stage: 'תשתיות', progress: 41, openTasks: 2, pendingApprovals: 1, schedule: 'ok', alerts: 0, img: 'assets/img/hero-1.jpg' },
       { id: 'p-katz', name: 'וילה כץ', client: 'משפחת כץ', city: 'כפר שמריהו', pm: 'עדי פרידמן', stage: 'תכנון', progress: 14, openTasks: 4, pendingApprovals: 2, schedule: 'ok', alerts: 0, img: 'assets/img/t-101.jpg' },
       { id: 'p-bendavid', name: 'פנטהאוז בן דוד', client: 'משפחת בן דוד', city: 'הרצליה', pm: 'עדי פרידמן', stage: 'התקנות', progress: 86, openTasks: 1, pendingApprovals: 0, schedule: 'ok', alerts: 0, img: 'assets/img/hero-5.jpg' },
-      { id: 'p-mor', name: 'בית מור', client: 'משפחת מור', city: 'כפר סבא', pm: 'רועי מזרחי', stage: 'הריסה', progress: 22, openTasks: 3, pendingApprovals: 0, schedule: 'risk', alerts: 2, img: 'assets/img/hero-3.jpg' },
+      { id: 'p-mor', name: 'בית מור', client: 'משפחת מור', city: 'כפר סבא', pm: 'חורחה עברין', stage: 'הריסה', progress: 22, openTasks: 3, pendingApprovals: 0, schedule: 'risk', alerts: 2, img: 'assets/img/hero-3.jpg' },
       { id: 'p-golan', name: 'בית גולן', client: 'משפחת גולן', city: 'רעננה', pm: 'עדי פרידמן', stage: 'מסירה', progress: 100, openTasks: 0, pendingApprovals: 0, schedule: 'done', alerts: 0, img: 'assets/img/t-108.jpg' },
     ],
   };
@@ -270,7 +270,7 @@ function seedData() {
 const STAGE_TEMPLATE = ['אפיון ופרוגרמה', 'תכנון', 'בחירת חומרים', 'הריסה', 'בנייה', 'תשתיות', 'עבודות גמר', 'נגרות', 'התקנות', 'מסירה'];
 
 // A new, empty project for the real system. With a template the stages are spread evenly between start and handover.
-function emptyProjectData({ name = '', family = '', address = '', client = '', start = TODAY, handover = '', budget = 0, team = null, image = 'assets/img/hero-home.svg', members = [], template = true } = {}) {
+function emptyProjectData({ name = '', family = '', address = '', client = '', start = TODAY, handover = '', budget = 0, team = null, image = 'assets/img/hero-home.jpg', members = [], template = true } = {}) {
   const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const s = parseDate(start || TODAY);
   const e = handover ? parseDate(handover) : new Date(s.getFullYear() + 1, s.getMonth(), s.getDate());
@@ -305,6 +305,10 @@ const ABOUT = {
     { icon: 'shield', title: 'שקט נפשי', text: 'חברת Casa Pueblo תעניק לכם את השקט הנפשי הנדיר, שמגיע רק כשעובדים עם מקצוענים.' },
   ],
 };
+
+// Team photos for the "about" section (from Itzik, 29.10.2026).
+const TEAM_NAMES = ['חורחה', 'יניב', 'עינב', 'אלכס', 'אולג'];
+const TEAM_PHOTOS = ['assets/img/team-site.jpg', 'assets/img/team-office.jpg', 'assets/img/team-cafe.jpg'];
 
 // Real before / after pairs from the Ramat Hasharon project on the company site.
 const BEFORE_AFTER = [

@@ -196,6 +196,8 @@
    Wordmark (stand-in until Casa Pueblo supplies a light/SVG logo)
    ========================================================================== */
 .wordmark { display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1; direction: ltr; text-decoration: none; }
+.wordmark .logo-img { display: block; height: 40px; width: auto; }
+.wordmark.lg .logo-img { height: 64px; }
 .wordmark .wm { font-family: "Cinzel", var(--serif); font-weight: 600; font-size: 22px; letter-spacing: .14em; color: var(--ink); white-space: nowrap; }
 .wordmark .wm em { font-style: normal; color: var(--terra); }
 .wordmark .wm small { font-size: .62em; letter-spacing: .32em; margin-inline-start: .35em; font-weight: 500; color: var(--ink-2); }
@@ -501,7 +503,7 @@ body.theme-navy { overflow-x: clip; }
 .theme-navy .login-box h1 { color: var(--ink); font-weight: 400; font-size: 34px; margin-top: 30px; }
 .theme-navy .login-box .lede { color: var(--ink-2); }
 .theme-navy .login-visual::after { background: linear-gradient(180deg, rgba(12, 23, 42, 0) 0%, rgba(12, 23, 42, 0) 55%, rgba(12, 23, 42, .85) 100%); }
-@media (min-width: 900px) { .theme-navy .login-visual { background-position: 35% center; } .theme-navy .login-visual::after { background: linear-gradient(270deg, rgba(12, 23, 42, 0) 78%, rgba(12, 23, 42, .85) 100%), linear-gradient(0deg, rgba(12, 23, 42, .75), transparent 28%); } }
+@media (min-width: 900px) { .theme-navy .login-visual { background-position: 78% center; } .theme-navy .login-visual::after { background: linear-gradient(270deg, rgba(12, 23, 42, 0) 78%, rgba(12, 23, 42, .85) 100%), linear-gradient(0deg, rgba(12, 23, 42, .75), transparent 28%); } }
 .theme-navy .login-visual .quote .serif { font-weight: 400; }
 .theme-navy .demo-entries { border-color: var(--line-2); }
 .theme-navy .demo-entries .tag { color: var(--muted); }
@@ -546,3 +548,20 @@ body.theme-navy { overflow-x: clip; }
 .swatch::after { background-image: linear-gradient(135deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, .12)); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06), inset 0 -40px 60px -30px rgba(0, 0, 0, .18); }
 .swatch .sw-name { position: relative; z-index: 1; margin: 12px 14px; font-family: var(--serif); font-weight: 300; font-size: 15px; color: rgba(20, 24, 32, .72); letter-spacing: .04em; mix-blend-mode: multiply; }
 .swatch .sw-name.light { color: rgba(255, 255, 255, .85); mix-blend-mode: normal; }
+
+/* Team photos in "about" */
+.team-block { margin-top: 34px; display: grid; gap: 18px; }
+@media (min-width: 900px) { .team-block { grid-template-columns: 1fr 2.2fr; align-items: center; gap: 32px; } }
+.team-head h3 { font-family: var(--serif); font-weight: 300; font-size: 26px; color: var(--ink); margin: 10px 0 6px; }
+.team-head p { color: var(--ink-2); margin: 0; }
+.team-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.team-photos .lux { aspect-ratio: 4 / 5; border: 0; padding: 0; }
+.team-photos .lux img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Bright daylight photos: keep the hero text readable on phones */
+@media (max-width: 899px) {
+  .lux-hero .bg { background-position: 72% center; }
+  .lux-hero::after { background: linear-gradient(180deg, rgba(12, 23, 42, .5) 0%, rgba(12, 23, 42, .35) 30%, rgba(12, 23, 42, .78) 55%, rgba(12, 23, 42, .95) 100%); }
+  .theme-navy .login-visual { background-position: 70% center; }
+  .theme-navy .login-visual::after { background: linear-gradient(180deg, rgba(12, 23, 42, 0) 0%, rgba(12, 23, 42, .25) 40%, rgba(12, 23, 42, .9) 100%); }
+}

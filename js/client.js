@@ -123,6 +123,10 @@ function openLightbox(items, start = 0) {
   draw();
   document.body.appendChild(el);
 }
+// All project photos, newest update first, for browsing from the home page.
+function projectAlbum() {
+  return Store.data.updates.flatMap((u) => u.photos.map((src) => ({ src, title: u.title, sub: fmtDate(u.date) })));
+}
 function openPhoto(src, caption) { openLightbox([{ src, title: caption || '' }]); }
 
 /* ---------- ראשי ---------- */
@@ -140,6 +144,12 @@ function aboutSection() {
         <div class="quote">״בית לעם״</div>
       </div>
       ${ABOUT.tiles.slice(3).map(aboutTile).join('')}
+    </div>
+    <div class="team-block">
+      <div class="team-head"><span class="eyebrow">הצוות שלנו</span><h3>${TEAM_NAMES.join(' · ')}</h3><p>האנשים שבונים לכם את הבית, מהשרטוט הראשון ועד המפתח.</p></div>
+      <div class="team-photos">
+        ${TEAM_PHOTOS.map((src, i) => `<button class="lux" data-team="${i}" aria-label="תמונת צוות"><img src="${src}" alt="צוות קאסה פואבלו" loading="lazy"></button>`).join('')}
+      </div>
     </div>
     <div class="about-foot"><span>Casa Pueblo · רח׳ זרחין 7, רעננה</span><a href="https://www.casa-pueblo.co.il" target="_blank" rel="noopener">casa-pueblo.co.il</a></div>
   </section>`;
@@ -207,7 +217,7 @@ Pages.home = () => {
         </div>
         ${latest && latest.photos.length ? `<button class="lux photo" data-lbhome="0" aria-label="תמונת השבוע">
           <img src="${esc(media(latest.photos[0]))}" alt="" loading="lazy">
-          <span class="tag">מהשטח השבוע</span>
+          <span class="tag">מהשטח השבוע · ${projectAlbum().length} תמונות</span>
           <span class="cap"><b>${esc(latest.title)}</b>${fmtDate(latest.date)}</span>
         </button>` : ''}
       </article>
@@ -254,8 +264,9 @@ Pages.home = () => {
     mount(root) {
       root.querySelectorAll('[data-task]').forEach((b) => (b.onclick = () => openTaskRef(Store.data.tasks.find((t) => t.id === b.dataset.task))));
       root.querySelectorAll('[data-lbg]').forEach((b) => (b.onclick = () => openLightbox(gallery, Number(b.dataset.lbg))));
+      root.querySelectorAll('[data-team]').forEach((b) => (b.onclick = () => openLightbox(TEAM_PHOTOS.map((src) => ({ src, title: 'הצוות של קאסה פואבלו' })), Number(b.dataset.team))));
       const wk = root.querySelector('[data-lbhome]');
-      if (wk) wk.onclick = () => openLightbox(latest.photos.map((src) => ({ src, title: latest.title })), 0);
+      if (wk) wk.onclick = () => openLightbox(projectAlbum(), 0);
     },
   };
 };

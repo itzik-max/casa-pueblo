@@ -82,7 +82,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 600; line-height: 1.25; }
 .login-visual {
   position: relative;
   min-height: 34vh;
-  background: #17284a url("../assets/img/hero-home.svg") center/cover no-repeat;
+  background: #17284a url("../assets/img/hero-home.jpg") center/cover no-repeat;
 }
 .login-visual::after {
   content: "";

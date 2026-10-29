@@ -78,7 +78,7 @@ const App = {
 function loginView() {
   return `
   <div class="login">
-    <div class="login-visual" role="img" aria-label="איור: בית עם חצר וילדים רצים עם עפיפון">
+    <div class="login-visual" role="img" aria-label="ילדים רצים מול בית מודרני">
       <div class="quote"><div class="serif">כל הבית. כל הפרויקט. במקום אחד.</div><p>הבית שלכם, המקצוענות שלנו.</p></div>
     </div>
     <div class="login-panel">
@@ -105,7 +105,6 @@ function loginView() {
           <button type="button" class="btn btn-ghost" data-demo="staff"><span>כניסה כצוות קאסה פואבלו</span><span class="tag">Back Office</span></button>
         </div>
         ${window.CASA_CONFIG && CASA_CONFIG.url ? '<p class="small" style="text-align:center;margin-top:14px"><button type="button" class="link-btn" id="lg-real">חזרה לכניסה למערכת</button></p>' : ''}
-        <p class="group-credit">מקבוצת אופטימו ק. בע"מ</p>
       </form>
     </div>
   </div>`;
@@ -114,7 +113,7 @@ function loginView() {
 function liveLoginView() {
   return `
   <div class="login">
-    <div class="login-visual" role="img" aria-label="איור: בית עם חצר וילדים רצים עם עפיפון">
+    <div class="login-visual" role="img" aria-label="ילדים רצים מול בית מודרני">
       <div class="quote"><div class="serif">כל הבית. כל הפרויקט. במקום אחד.</div><p>הבית שלכם, המקצוענות שלנו.</p></div>
     </div>
     <div class="login-panel">
@@ -129,7 +128,6 @@ function liveLoginView() {
           <p class="form-hint" id="lg-err" style="color:var(--st-red);margin-top:10px"></p>
         </div>
         <div class="demo-entries"><button type="button" class="link-btn small" id="lg-demo">צפייה באב־טיפוס להדגמה</button></div>
-        <p class="group-credit">מקבוצת אופטימו ק. בע"מ</p>
       </form>
     </div>
   </div>`;
@@ -221,7 +219,7 @@ function navLink([page, ic, label], current, count) {
 
 // Typographic stand-in for the logo on dark backgrounds (the site PNG has a white background).
 function wordmark(size = '') {
-  return `<a class="wordmark ${size}" href="#/home" aria-label="Casa Pueblo – הבית שלי"><span class="wm">CAS<em>A</em><small>PUEBLO</small></span><span class="sub">הבית שלי</span></a>`;
+  return `<a class="wordmark ${size}" href="#/home" aria-label="Casa Pueblo – הבית שלי"><img class="logo-img" src="assets/img/logo-light.png" alt="Casa Pueblo"><span class="sub">הבית שלי</span></a>`;
 }
 
 function navMode() { return (Store.session && Store.session.nav) || 'tabs'; }
