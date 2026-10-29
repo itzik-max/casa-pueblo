@@ -565,3 +565,11 @@ body.theme-navy { overflow-x: clip; }
   .theme-navy .login-visual { background-position: 70% center; }
   .theme-navy .login-visual::after { background: linear-gradient(180deg, rgba(12, 23, 42, 0) 0%, rgba(12, 23, 42, .25) 40%, rgba(12, 23, 42, .9) 100%); }
 }
+
+/* Weekly summary on the home page */
+.weekly .wk-cols { display: grid; gap: 18px; margin-top: 18px; }
+@media (min-width: 700px) { .weekly .wk-cols { grid-template-columns: 1fr 1fr; } }
+.weekly .wk-h { font-size: 12px; letter-spacing: .18em; color: var(--gold); margin-bottom: 8px; }
+.wk-list { margin: 0; padding-inline-start: 18px; display: grid; gap: 6px; }
+.theme-navy .wk-list li { color: #e9e2d6; font-size: 16px; line-height: 1.5; }
+.wk-list li::marker { color: var(--gold); }

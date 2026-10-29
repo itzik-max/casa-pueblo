@@ -1,6 +1,6 @@
 /* Shared UI helpers: state, formatting, icons, modal, toast, tooltip. */
 
-const STORE_KEY = 'casa-portal-demo-v4';
+const STORE_KEY = 'casa-portal-demo-v5';
 const LIVE_SESSION_KEY = 'casa-live-session';
 
 const Store = {

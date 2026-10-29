@@ -140,6 +140,14 @@ const Live = {
     if (error) throw error;
   },
 
+  // Publishes this week's approved summary now and emails the family (edge function "weekly").
+  async publishWeekly(pid) {
+    const { data, error } = await this.sb.functions.invoke('weekly', { body: { mode: 'publish', pid } });
+    if (error) throw error;
+    if (data && data.error) throw new Error(data.error);
+    return data;
+  },
+
   async auditLog(pid) {
     const { data } = await this.sb.from('audit_log').select('actor_email, action, detail, at').eq('project_id', pid).order('at', { ascending: false }).limit(200);
     return data || [];

@@ -147,7 +147,7 @@ declare
   cur projects%rowtype;
   k text;
   changed text[] := '{}';
-  protected text[] := array['project', 'members', 'team', 'timeline', 'updates', 'pros'];
+  protected text[] := array['project', 'members', 'team', 'timeline', 'updates', 'pros', 'weeklySummaries'];
 begin
   select * into cur from projects where id = pid for update;
   if not found then raise exception 'project not found'; end if;

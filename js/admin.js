@@ -154,7 +154,7 @@ Pages['bo-home'] = (q) => {
 
 /* ---------- ניהול פרויקט ---------- */
 const PROJECT_ACTIONS = [
-  ['weekly', 'send', 'שליחת עדכון ללקוח'],
+  ['weekly', 'send', 'הסיכום השבועי'],
   ['stage', 'timeline', 'עדכון שלב והתקדמות'],
   ['timeline', 'history', 'עדכון לוח זמנים'],
   ['details', 'edit', 'עריכת פרטי פרויקט'],
@@ -173,7 +173,8 @@ const PROJECT_ACTIONS = [
 ];
 
 const ACTIONS = {
-  weekly() {
+  weekly() { App.go('bo-weekly'); },
+  weeklyText() {
     const p = Store.data.project;
     formModal({
       title: 'עדכון שבועי ללקוח', intro: 'הטקסט יופיע בראש הדשבורד של המשפחה תחת "כרגע בפרויקט".',

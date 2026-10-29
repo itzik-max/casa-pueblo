@@ -255,6 +255,11 @@ function seedData() {
       { when: '2026-09-20 12:00', who: 'מיכל אדרי', what: 'עדכנה תשלום: תחילת עבודות גמר ₪89,000' },
     ],
 
+    weeklySummaries: [
+      { id: 'w2', week: '2026-10-16', status: 'draft', done: ['הריצוף בקומה העליונה הושלם', 'הגיעו גופי הארונות לחדרי הילדים', 'הועלתה תכנית החשמל המעודכנת (גרסה 4)'], next: ['התקנת הארונות בחדרי הילדים', 'שכבת צבע שנייה בקומה העליונה', 'מחכה לאישור שלכם: תכנית החשמל ותכנית התאורה'] },
+      { id: 'w1', week: '2026-10-09', status: 'sent', approvedBy: 'חורחה עברין', sentAt: '2026-10-09T17:00:00', done: ['חיפוי הקיר באמבטיית ההורים הותקן', 'התחלנו בהתקנת הנגרות', 'הועלתה תכנית התאורה (גרסה 3)'], next: ['סיום הריצוף בקומה העליונה', 'הגעת גופי הארונות לחדרי הילדים', 'אישור תכנית התאורה לפני הזמנת הגופים'] },
+    ],
+
     // Back-office portfolio (other families shown only to staff)
     portfolio: [
       { id: 'p-avrahami', name: 'בית אברהמי', client: 'אורי ונועה אברהמי', city: 'רמת השרון', pm: 'חורחה עברין', stage: 'עבודות גמר', progress: 68, openTasks: 5, pendingApprovals: 3, schedule: 'delay', alerts: 1, img: 'assets/img/hero-4.jpg' },
@@ -288,7 +293,7 @@ function emptyProjectData({ name = '', family = '', address = '', client = '', s
     },
     team: team || JSON.parse(JSON.stringify(TEAM)),
     members, timeline, plans: [], materials: [], expenses: [], categoryBudgets: {}, casaMilestones: [], changes: [],
-    updates: [], documents: [], pros: [], tickets: [], tasks: [], notifications: [], audit: [], portfolio: [],
+    updates: [], documents: [], pros: [], tickets: [], tasks: [], notifications: [], audit: [], portfolio: [], weeklySummaries: [],
   };
 }
 

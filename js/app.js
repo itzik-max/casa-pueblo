@@ -18,6 +18,7 @@ const CLIENT_TABS = [['home', 'home', 'ראשי'], ['plans', 'plans', 'תכני�
 const STAFF_NAV = [
   ['bo-home', 'grid', 'כל הפרויקטים'],
   ['bo-project', 'building', 'בית אברהמי'],
+  ['bo-weekly', 'send', 'סיכום שבועי'],
   ['bo-new', 'plus', 'פרויקט חדש'],
   ['bo-perms', 'key', 'הרשאות'],
   ['bo-audit', 'history', 'יומן פעילות'],

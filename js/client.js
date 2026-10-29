@@ -174,7 +174,8 @@ Pages.home = () => {
   const active = d.timeline.find((s) => s.status === 'active');
   const nextStage = d.timeline.find((s) => s.status === 'future');
   const gallery = d.updates.filter((u) => u.stage !== 'לפני').flatMap((u) => u.photos.map((src) => ({ src, title: u.title, sub: fmtDate(u.date) }))).slice(0, 5);
-  const sinceUpdate = daysBetween(p.weekly.updated, TODAY);
+  const wk = latestSentSummary(d);
+  const sinceUpdate = daysBetween(wk ? wk.week : p.weekly.updated, TODAY);
   return {
     title: 'ראשי',
     html: `
@@ -200,10 +201,14 @@ Pages.home = () => {
         <div class="copy">
           <div class="head">
             <span class="eyebrow">העדכון השבועי</span>
-            <span class="date">${icon('clock')}עודכן ${fmtDateLong(p.weekly.updated)}${sinceUpdate <= 7 ? ' · חדש' : ''}</span>
+            <span class="date">${icon('clock')}עודכן ${fmtDateLong(wk ? wk.week : p.weekly.updated)}${sinceUpdate <= 7 ? ' · חדש' : ''}</span>
           </div>
           <h2 id="weekly-h">כרגע בפרויקט</h2>
-          <blockquote>${esc(p.weekly.text)}</blockquote>
+          ${wk ? `<div class="wk-cols">
+            <div><div class="wk-h">מה עשינו השבוע</div>${bulletList(wk.done)}</div>
+            <div><div class="wk-h">מה הלאה</div>${bulletList(wk.next)}</div>
+          </div>
+          <button class="link-btn small" id="wk-history" style="align-self:flex-start;margin-top:10px">לסיכומים הקודמים</button>` : `<blockquote>${esc(p.weekly.text)}</blockquote>`}
           <div class="highlights">
             ${active ? `<span>בביצוע: <b>${esc(active.name)}</b></span>` : ''}
             ${delays.map((s) => `<span>לתשומת לב: <b>${esc(s.name)}</b></span>`).join('')}
@@ -267,6 +272,8 @@ Pages.home = () => {
       root.querySelectorAll('[data-team]').forEach((b) => (b.onclick = () => openLightbox(TEAM_PHOTOS.map((src) => ({ src, title: 'הצוות של קאסה פואבלו' })), Number(b.dataset.team))));
       const wk = root.querySelector('[data-lbhome]');
       if (wk) wk.onclick = () => openLightbox(projectAlbum(), 0);
+      const wh = root.querySelector('#wk-history');
+      if (wh) wh.onclick = openWeeklyHistory;
     },
   };
 };
