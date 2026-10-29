@@ -1,7 +1,14 @@
 /* Demo data for the prototype. In production this comes from the database,
    filtered by the logged-in user's project permissions. */
 
-const TODAY = '2026-10-15';
+// The demo is frozen on 15.10.2026. The real system uses today's date.
+const TODAY = (() => {
+  let demo = true;
+  try { demo = !(window.CASA_CONFIG && CASA_CONFIG.url) || localStorage.getItem('casa-mode') === 'demo'; } catch (e) { /* ignore */ }
+  if (demo) return '2026-10-15';
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+})();
 
 const SPACES = ['מטבח', 'סלון', 'פינת אוכל', 'חדר הורים', 'חדרי ילדים', 'חדרי רחצה', 'שירותי אורחים', 'מרפסת', 'גינה', 'שטחים כלליים'];
 
@@ -257,6 +264,31 @@ function seedData() {
       { id: 'p-mor', name: 'בית מור', client: 'משפחת מור', city: 'כפר סבא', pm: 'רועי מזרחי', stage: 'הריסה', progress: 22, openTasks: 3, pendingApprovals: 0, schedule: 'risk', alerts: 2, img: 'assets/img/hero-3.jpg' },
       { id: 'p-golan', name: 'בית גולן', client: 'משפחת גולן', city: 'רעננה', pm: 'עדי פרידמן', stage: 'מסירה', progress: 100, openTasks: 0, pendingApprovals: 0, schedule: 'done', alerts: 0, img: 'assets/img/t-108.jpg' },
     ],
+  };
+}
+
+const STAGE_TEMPLATE = ['אפיון ופרוגרמה', 'תכנון', 'בחירת חומרים', 'הריסה', 'בנייה', 'תשתיות', 'עבודות גמר', 'נגרות', 'התקנות', 'מסירה'];
+
+// A new, empty project for the real system. With a template the stages are spread evenly between start and handover.
+function emptyProjectData({ name = '', family = '', address = '', client = '', start = TODAY, handover = '', budget = 0, team = null, image = 'assets/img/hero-home.svg', members = [], template = true } = {}) {
+  const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const s = parseDate(start || TODAY);
+  const e = handover ? parseDate(handover) : new Date(s.getFullYear() + 1, s.getMonth(), s.getDate());
+  const step = Math.max(1, (e - s) / STAGE_TEMPLATE.length);
+  const timeline = template ? STAGE_TEMPLATE.map((n, i) => ({
+    name: n, ps: iso(new Date(+s + step * i)), pe: iso(new Date(+s + step * (i + 1) - 864e5)),
+    as: i === 0 ? iso(s) : null, ae: null, status: i === 0 ? 'active' : 'future', note: '', photos: [],
+  })) : [];
+  return {
+    project: {
+      id: '', name, family, address, client: client || (family ? `משפחת ${family}` : ''), image,
+      stage: timeline.length ? timeline[0].name : '', progress: 0, start: start || TODAY, handover: iso(e), pm: 'pm',
+      scope: '', area: '', budget: budget || 0,
+      weekly: { updated: start || TODAY, text: 'ברוכים הבאים לאזור האישי של הפרויקט. כאן נעדכן אתכם בכל שבוע.' },
+    },
+    team: team || JSON.parse(JSON.stringify(TEAM)),
+    members, timeline, plans: [], materials: [], expenses: [], categoryBudgets: {}, casaMilestones: [], changes: [],
+    updates: [], documents: [], pros: [], tickets: [], tasks: [], notifications: [], audit: [], portfolio: [],
   };
 }
 

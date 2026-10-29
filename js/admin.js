@@ -32,6 +32,32 @@ function formModal({ title, intro = '', fields, submit = 'שמירה', onSave })
   });
 }
 
+// Shrinks a phone photo before upload (long side up to maxW, JPEG). Non-images pass through.
+function shrinkImage(file, maxW = 2000) {
+  if (!file || !/^image\/(jpeg|png|webp|heic)/.test(file.type)) return Promise.resolve(file);
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxW / Math.max(img.width, img.height));
+      if (scale === 1 && file.size < 1.5e6) return resolve(file);
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob((b) => resolve(b ? new File([b], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file), 'image/jpeg', 0.82);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
+// Runs a save that may upload files, and turns a failure into a message instead of a stuck modal.
+async function withUpload(fn) {
+  try { return await fn(); } catch (e) { return 'הפעולה לא הושלמה: ' + e.message; }
+}
+
 // Downscale an uploaded photo so the demo can keep it in browser storage.
 function readImage(file, maxW = 900) {
   return new Promise((resolve) => {
@@ -61,7 +87,7 @@ Pages['bo-home'] = (q) => {
   const d = Store.data;
   // keep the live demo project in sync with its portfolio row
   const live = d.portfolio.find((p) => p.id === d.project.id);
-  Object.assign(live, {
+  if (live) Object.assign(live, {
     stage: d.project.stage, progress: d.project.progress,
     openTasks: d.tasks.filter((t) => !t.done).length,
     pendingApprovals: d.tasks.filter((t) => !t.done && t.type === 'approval').length,
@@ -92,7 +118,7 @@ Pages['bo-home'] = (q) => {
       <div class="project-cards">
         ${list.map((p) => `
           <article class="card pcard" data-p="${p.id}" tabindex="0">
-            <div class="img" style="background-image:url('${esc(p.img)}')">${pill(SCHEDULE[p.schedule][0], SCHEDULE[p.schedule][1])}</div>
+            <div class="img" style="background-image:url('${esc(media(p.img))}')">${pill(SCHEDULE[p.schedule][0], SCHEDULE[p.schedule][1])}</div>
             <div class="body">
               <div class="split"><h3>${esc(p.name)}</h3><span class="small muted">${esc(p.city)}</span></div>
               <div class="small ink-2">${esc(p.client)} · מנהל: ${esc(p.pm)}</div>
@@ -115,6 +141,7 @@ Pages['bo-home'] = (q) => {
       if (f.c) { c.focus(); c.setSelectionRange(f.c.length, f.c.length); }
       root.querySelectorAll('[data-p]').forEach((el) => {
         const open = () => {
+          if (Store.live) { Live.flush().then(() => Live.open(el.dataset.p)).then(() => App.go('bo-project')); return; }
           if (el.dataset.p === Store.data.project.id) App.go('bo-project');
           else toast('בהדגמה, רק "בית אברהמי" מלא בנתונים');
         };
@@ -210,9 +237,20 @@ const ACTIONS = {
         { id: 'name', label: 'שם הפרויקט', value: p.name, required: true },
         { id: 'address', label: 'כתובת', value: p.address },
         { id: 'handover', label: 'תאריך מסירה משוער', type: 'date', value: p.handover },
-        { id: 'image', label: 'תמונה ראשית', type: 'select', options: [['assets/img/hero-home.svg', 'איור: בית עם חצר'], ['assets/img/hero-4.jpg', 'סלון'], ['assets/img/hero-1.jpg', 'כניסה'], ['assets/img/hero-5.jpg', 'פינת אוכל'], ['assets/img/j-33.jpg', 'סלון 2']], value: p.image },
+        ...(Store.live ? [{ id: 'imgfile', label: 'תמונה ראשית חדשה (לא חובה)', type: 'file', accept: 'image/*' }] : []),
+        { id: 'image', label: 'תמונה ראשית', type: 'select', options: [...(String(p.image).startsWith('f:') ? [[p.image, 'התמונה שהועלתה']] : []), ['assets/img/hero-home.svg', 'איור: בית עם חצר'], ['assets/img/hero-4.jpg', 'סלון'], ['assets/img/hero-1.jpg', 'כניסה'], ['assets/img/hero-5.jpg', 'פינת אוכל'], ['assets/img/j-33.jpg', 'סלון 2']], value: p.image },
       ],
-      onSave(v) { Object.assign(p, v); Store.log('עדכן את פרטי הפרויקט', TEAM.pm.name); Store.save(); return 'פרטי הפרויקט נשמרו'; },
+      onSave(v) {
+        return withUpload(async () => {
+          const f = v.imgfile && v.imgfile[0];
+          delete v.imgfile;
+          if (f) v.image = await storeFile(await shrinkImage(f, 2400));
+          Object.assign(p, v);
+          Store.log('עדכן את פרטי הפרויקט', TEAM.pm.name);
+          Store.save();
+          return 'פרטי הפרויקט נשמרו';
+        });
+      },
     });
   },
   plan() {
@@ -225,16 +263,17 @@ const ACTIONS = {
         { id: 'approve', label: 'לבקש אישור מהלקוח', type: 'checkbox', value: true },
       ],
       submit: 'העלאה',
-      onSave(v) {
+      onSave(v) { return withUpload(async () => {
         const f = v.file[0];
+        const path = await storeFile(f);
         const id = 'pl' + Date.now();
-        Store.data.plans.unshift({ id, cat: v.cat, title: v.title, status: v.approve ? 'pending' : 'new', versions: [{ v: 1, date: TODAY, by: TEAM.architect.name, note: 'גרסה ראשונה', file: f ? f.name.split('.').pop().toUpperCase().slice(0, 4) : 'PDF', size: f ? (f.size / 1048576).toFixed(1) + 'MB' : '—' }] });
+        Store.data.plans.unshift({ id, cat: v.cat, title: v.title, status: v.approve ? 'pending' : 'new', versions: [{ v: 1, date: TODAY, by: TEAM.architect.name, note: 'גרסה ראשונה', path, file: f ? f.name.split('.').pop().toUpperCase().slice(0, 4) : 'PDF', size: f ? (f.size / 1048576).toFixed(1) + 'MB' : '—' }] });
         if (v.approve) Store.data.tasks.unshift({ id: 'k' + Date.now(), type: 'approval', title: `אישור ${v.title} V1`, sub: `ביקשה ${TEAM.architect.name} · ${fmtDateShort(TODAY)}`, ref: { page: 'plans', id }, level: 'red', done: false });
         Store.log(`העלה תכנית ${v.cat}: ${v.title} V1${v.approve ? ' וביקש אישור' : ''}`, TEAM.architect.name);
         Store.notify(`נוספה תכנית חדשה: ${v.title}`, 'plans');
         Store.save();
         return 'התכנית הועלתה והלקוח קיבל התראה';
-      },
+      }); },
     });
   },
   version() {
@@ -248,10 +287,13 @@ const ACTIONS = {
         { id: 'approve', label: 'לבקש אישור מהלקוח', type: 'checkbox', value: true },
       ],
       submit: 'העלאת גרסה',
-      onSave(v) {
+      onSave(v) { return withUpload(async () => {
         const p = plans.find((x) => x.id === v.id);
         const nv = p.versions[0].v + 1;
-        p.versions.unshift({ v: nv, date: TODAY, by: TEAM.architect.name, note: v.note, file: p.versions[0].file, size: p.versions[0].size });
+        const f = v.file[0];
+        const path = await storeFile(f);
+        p.versions.unshift({ v: nv, date: TODAY, by: Store.live ? currentUserName() : TEAM.architect.name, note: v.note, path,
+          file: f ? f.name.split('.').pop().toUpperCase().slice(0, 4) : p.versions[0].file, size: f ? (f.size / 1048576).toFixed(1) + 'MB' : p.versions[0].size });
         p.status = v.approve ? 'pending' : 'new';
         if (v.approve) {
           Store.data.tasks.forEach((t) => { if (t.ref && t.ref.id === p.id) t.done = true; });
@@ -261,7 +303,7 @@ const ACTIONS = {
         Store.notify(`עודכנה תכנית: ${p.title} V${nv}${v.approve ? ' – נדרש אישורך' : ''}`, 'plans');
         Store.save();
         return `גרסה V${nv} הועלתה`;
-      },
+      }); },
     });
   },
   approval() {
@@ -331,16 +373,21 @@ const ACTIONS = {
         { id: 'files', label: 'תמונות (מהנייד או מהמחשב)', type: 'file', multiple: true, accept: 'image/*' },
       ],
       submit: 'פרסום',
-      async onSave(v) {
+      async onSave(v) { return withUpload(async () => {
         let photos = [];
-        for (const f of [...v.files].slice(0, 6)) { const src = await readImage(f); if (src) photos.push(src); }
-        if (!photos.length) photos = ['assets/img/j-28.jpg', 'assets/img/j-31.jpg'];
+        if (Store.live) {
+          if (!v.files.length) return 'צריך לבחור לפחות תמונה אחת';
+          for (const f of [...v.files].slice(0, 30)) photos.push(await storeFile(await shrinkImage(f)));
+        } else {
+          for (const f of [...v.files].slice(0, 6)) { const src = await readImage(f); if (src) photos.push(src); }
+          if (!photos.length) photos = ['assets/img/j-28.jpg', 'assets/img/j-31.jpg'];
+        }
         Store.data.updates.unshift({ id: 'u' + Date.now(), date: TODAY, title: v.title, stage: v.stage, desc: v.desc, photos });
         Store.log(`העלה ${photos.length} תמונות: ${v.title}`, TEAM.pm.name);
         Store.notify(`נוספו ${photos.length} תמונות חדשות מהפרויקט`, 'photos');
         Store.save();
         return 'התמונות פורסמו ביומן הפרויקט';
-      },
+      }); },
     });
   },
   doc() { uploadDocFlow(); },
@@ -358,7 +405,8 @@ const ACTIONS = {
         const m = Store.data.casaMilestones[v.i];
         m.paid = v.date || TODAY;
         m.invoice = v.invoice;
-        Store.data.expenses.find((e) => e.casa).payments.push({ date: m.paid, amount: m.amount });
+        const casa = Store.data.expenses.find((e) => e.casa);
+        if (casa) casa.payments.push({ date: m.paid, amount: m.amount });
         Store.log(`עדכן תשלום: ${m.name} ${ils(m.amount)}`, TEAM.office.name);
         Store.save();
         return 'התשלום נרשם';
@@ -424,25 +472,30 @@ const ACTIONS = {
   },
   member() {
     formModal({
-      title: 'הזמנת משתמש לפרויקט', intro: 'המשתמש יקבל קישור במייל או ב-SMS לבחירת סיסמה, ויראה רק את הפרויקט הזה.',
+      title: 'הזמנת משתמש לפרויקט', intro: Store.live ? 'המשתמש יקבל למייל קישור כניסה, ויראה רק את הפרויקט הזה.' : 'המשתמש יקבל קישור במייל או ב-SMS לבחירת סיסמה, ויראה רק את הפרויקט הזה.',
       fields: [
         { id: 'name', label: 'שם', required: true },
         { id: 'role', label: 'תפקיד', type: 'select', options: ['בעל הבית', 'בת/בן זוג', 'מעצב/ת מטעם המשפחה', 'בן משפחה נוסף', 'בעל מקצוע'] },
         { id: 'email', label: 'אימייל', type: 'email' }, { id: 'phone', label: 'טלפון', type: 'tel' },
       ],
       submit: 'שליחת הזמנה',
-      onSave(v) {
+      onSave(v) { return withUpload(async () => {
+        if (Store.live) {
+          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.email)) return 'בלי מייל תקין אי אפשר לשלוח הזמנה';
+          await Live.invite(Store.data.project.id, v.email.toLowerCase(), v.role);
+        }
         Store.data.members.push({ ...v, status: 'הוזמן' });
         Store.log(`הזמין את ${v.name} (${v.role}) לפרויקט`, TEAM.pm.name);
         Store.save();
         return `ההזמנה נשלחה ל${v.name}`;
-      },
+      }); },
     });
   },
 };
 
 Pages['bo-project'] = () => {
   const d = Store.data;
+  if (d.empty) return { title: 'אין עדיין פרויקטים', html: `<div class="page-head"><div><h1>אין עדיין פרויקטים</h1><p>יוצרים את הפרויקט הראשון, ואחר כך מזמינים אליו את המשפחה.</p></div><a class="btn btn-accent" href="#/bo-new">${icon('plus')}פרויקט חדש</a></div>`, mount() {} };
   const p = d.project;
   const open = d.tasks.filter((t) => !t.done);
   return {
@@ -513,10 +566,19 @@ Pages['bo-new'] = () => ({
       <div class="row-actions"><button class="btn btn-primary" type="submit">${icon('check')}יצירת הפרויקט</button><a class="btn btn-ghost" href="#/bo-home">ביטול</a></div>
     </form>`,
   mount(root) {
-    root.querySelector('#np').onsubmit = (e) => {
+    root.querySelector('#np').onsubmit = async (e) => {
       e.preventDefault();
       const f = new FormData(e.target);
       if (!f.get('name') || !f.get('family')) return;
+      if (Store.live) {
+        const btn = e.target.querySelector('[type=submit]');
+        btn.disabled = true;
+        try {
+          await createLiveProject(f);
+          App.go('bo-project');
+        } catch (ex) { btn.disabled = false; toast('יצירת הפרויקט נכשלה: ' + ex.message); }
+        return;
+      }
       Store.data.portfolio.push({ id: 'p' + Date.now(), name: f.get('name'), client: `משפחת ${f.get('family')}`, city: (f.get('address') || '').split(',').pop().trim() || '—', pm: f.get('pm'), stage: 'אפיון ופרוגרמה', progress: 0, openTasks: 0, pendingApprovals: 0, schedule: 'ok', alerts: 0, img: 'assets/img/t-102.jpg' });
       Store.log(`יצר פרויקט חדש: ${f.get('name')}`, TEAM.pm.name);
       Store.save();
@@ -525,6 +587,31 @@ Pages['bo-new'] = () => ({
     };
   },
 });
+
+// Creates the project row, uploads its cover photo and invites the family by email.
+async function createLiveProject(f) {
+  await Live.flush();
+  const team = JSON.parse(JSON.stringify(TEAM));
+  team.pm.name = f.get('pm');
+  team.architect.name = f.get('arch');
+  const members = [['c1', 'בעל הבית'], ['c2', 'בן/בת זוג']]
+    .filter(([k]) => f.get(k) || f.get(k + 'c'))
+    .map(([k, role]) => ({ name: f.get(k) || '', role, email: /@/.test(f.get(k + 'c')) ? f.get(k + 'c').trim().toLowerCase() : '', phone: /@/.test(f.get(k + 'c')) ? '' : f.get(k + 'c'), status: 'הוזמן' }));
+  const data = emptyProjectData({
+    name: f.get('name'), family: f.get('family'), address: f.get('address') || '', start: f.get('start') || TODAY,
+    handover: f.get('end') || '', budget: Number(f.get('budget')) || 0, team, members, template: !!f.get('tpl'),
+  });
+  const pid = await Live.createProject(data);
+  await Live.open(pid);
+  const img = f.get('img');
+  if (img && img.size) Store.data.project.image = await storeFile(await shrinkImage(img, 2400));
+  let sent = 0;
+  if (f.get('invite')) for (const m of members) if (m.email) { await Live.invite(pid, m.email, m.role); sent++; }
+  Store.log(`יצר את הפרויקט ${f.get('name')}`);
+  Store.save();
+  await Live.flush();
+  toast(sent ? `הפרויקט נוצר ונשלחו ${sent} הזמנות במייל` : 'הפרויקט נוצר');
+}
 
 /* ---------- הרשאות ---------- */
 Pages['bo-perms'] = () => {

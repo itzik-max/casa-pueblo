@@ -260,7 +260,7 @@ function expenseForm() {
     foot: `<button class="btn btn-primary" id="xf-save">${icon('check')}שמירת ההוצאה</button>`,
     onOpen(el) {
       const $ = (s) => el.querySelector(s);
-      $('#xf-save').onclick = () => {
+      $('#xf-save').onclick = async (ev) => {
         const total = Number($('#xf-total').value);
         const paid = Number($('#xf-paid').value) || 0;
         const item = $('#xf-item').value.trim();
@@ -268,6 +268,9 @@ function expenseForm() {
         const spaces = [...el.querySelectorAll('.chips-input input:checked')].map((i) => i.value);
         if (!item || !sup || !(total > 0)) { $('#xf-err').textContent = 'צריך למלא ספק, פריט ועלות כוללת.'; return; }
         if (paid > total) { $('#xf-err').textContent = 'הסכום ששולם גבוה מהעלות הכוללת.'; return; }
+        ev.target.disabled = true;
+        let path = '';
+        try { path = await storeFile($('#xf-file').files[0]); } catch (e) { ev.target.disabled = false; return; }
         const id = 'e' + Date.now();
         const cat = $('#xf-cat').value;
         const exp = {
@@ -282,7 +285,7 @@ function expenseForm() {
           exp.material = mid;
         }
         if ($('#xf-file').files[0]) {
-          Store.data.documents.unshift({ id: 'd' + Date.now(), cat: 'חשבוניות', title: `${sup} – ${item}`, date: exp.date, type: ($('#xf-file').files[0].name.split('.').pop() || 'PDF').toUpperCase().slice(0, 4), size: ($('#xf-file').files[0].size / 1048576).toFixed(1) + 'MB', expense: id });
+          Store.data.documents.unshift({ id: 'd' + Date.now(), cat: 'חשבוניות', title: `${sup} – ${item}`, date: exp.date, type: ($('#xf-file').files[0].name.split('.').pop() || 'PDF').toUpperCase().slice(0, 4), size: ($('#xf-file').files[0].size / 1048576).toFixed(1) + 'MB', expense: id, path });
         }
         Store.data.expenses.push(exp);
         Store.log(`הוסיף הוצאה: ${sup} – ${item} (${ils(total)})`);

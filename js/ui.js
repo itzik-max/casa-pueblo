@@ -1,11 +1,18 @@
 /* Shared UI helpers: state, formatting, icons, modal, toast, tooltip. */
 
 const STORE_KEY = 'casa-portal-demo-v3';
+const LIVE_SESSION_KEY = 'casa-live-session';
 
 const Store = {
   data: null,
   session: null,
+  live: false,
   load() {
+    if (this.live) {
+      // Data comes from the database (Live.open). Only view preferences stay in the browser.
+      try { this.session = JSON.parse(localStorage.getItem(LIVE_SESSION_KEY) || 'null'); } catch (e) { this.session = null; }
+      return;
+    }
     try {
       const raw = localStorage.getItem(STORE_KEY);
       if (raw) {
@@ -18,6 +25,11 @@ const Store = {
     this.data = seedData();
   },
   save() {
+    if (this.live) {
+      try { localStorage.setItem(LIVE_SESSION_KEY, JSON.stringify(this.session)); } catch (e) { /* ignore */ }
+      Live.queueSave();
+      return;
+    }
     try { localStorage.setItem(STORE_KEY, JSON.stringify({ data: this.data, session: this.session })); } catch (e) { /* ignore */ }
   },
   reset() {
@@ -28,7 +40,7 @@ const Store = {
     const now = new Date();
     const pad = (n) => String(n).padStart(2, '0');
     const when = `${TODAY} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    this.data.audit.unshift({ when, who: who || currentUserName(), what });
+    this.data.audit.unshift({ when, who: (this.live ? '' : who) || currentUserName(), what });
   },
   notify(text, link) {
     const now = new Date();
@@ -38,6 +50,7 @@ const Store = {
 };
 
 function currentUserName() {
+  if (Store.live && Live.user) return Live.user.name;
   return Store.session && Store.session.role === 'staff' ? TEAM.pm.name : 'אורי אברהמי';
 }
 

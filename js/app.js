@@ -46,7 +46,9 @@ const App = {
   render() {
     Tip.hide();
     const app = document.getElementById('app');
-    if (!Store.session) { document.body.className = 'theme-navy'; app.innerHTML = loginView(); mountLogin(app); return; }
+    if (!Store.session) { document.body.className = 'theme-navy'; app.innerHTML = Store.live ? liveLoginView() : loginView(); (Store.live ? mountLiveLogin : mountLogin)(app); return; }
+    if (Store.live && !Store.data) { document.body.className = 'theme-navy'; app.innerHTML = noProjectView(); app.querySelector('#np-out').onclick = logout; return; }
+    STAFF_NAV[1][2] = Store.data.project.name || 'הפרויקט';
 
     const r = this.parse();
     const staff = this.isStaffView();
@@ -102,10 +104,62 @@ function loginView() {
           <button type="button" class="btn btn-ghost" data-demo="client"><span>כניסה כלקוח</span><span class="tag">משפחת אברהמי</span></button>
           <button type="button" class="btn btn-ghost" data-demo="staff"><span>כניסה כצוות קאסה פואבלו</span><span class="tag">Back Office</span></button>
         </div>
+        ${window.CASA_CONFIG && CASA_CONFIG.url ? '<p class="small" style="text-align:center;margin-top:14px"><button type="button" class="link-btn" id="lg-real">חזרה לכניסה למערכת</button></p>' : ''}
         <p class="group-credit">מקבוצת אופטימו ק. בע"מ</p>
       </form>
     </div>
   </div>`;
+}
+
+function liveLoginView() {
+  return `
+  <div class="login">
+    <div class="login-visual" role="img" aria-label="איור: בית עם חצר וילדים רצים עם עפיפון">
+      <div class="quote"><div class="serif">כל הבית. כל הפרויקט. במקום אחד.</div><p>הבית שלכם, המקצוענות שלנו.</p></div>
+    </div>
+    <div class="login-panel">
+      <form class="login-box" id="login" novalidate>
+        ${wordmark('lg')}
+        <h1>הבית שלי</h1>
+        <p class="lede">כניסה לאזור האישי של הפרויקט שלכם</p>
+        <div id="lg-step">
+          <label class="field"><span>אימייל</span><input class="input" id="lg-user" type="email" autocomplete="email" placeholder="name@example.com" dir="ltr" required></label>
+          <button class="btn btn-primary btn-block" type="submit">שליחת קישור כניסה</button>
+          <p class="form-hint">נשלח אליכם למייל קישור. לוחצים עליו ונכנסים, בלי סיסמה.</p>
+          <p class="form-hint" id="lg-err" style="color:var(--st-red);margin-top:10px"></p>
+        </div>
+        <div class="demo-entries"><button type="button" class="link-btn small" id="lg-demo">צפייה באב־טיפוס להדגמה</button></div>
+        <p class="group-credit">מקבוצת אופטימו ק. בע"מ</p>
+      </form>
+    </div>
+  </div>`;
+}
+
+function mountLiveLogin(app) {
+  const form = app.querySelector('#login');
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const email = app.querySelector('#lg-user').value.trim().toLowerCase();
+    const err = app.querySelector('#lg-err');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = 'צריך להזין כתובת מייל תקינה'; return; }
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true;
+    try {
+      await Live.sendLink(email);
+      app.querySelector('#lg-step').innerHTML = `<div class="card card-pad" style="background:rgba(255,255,255,.04)"><b>שלחנו קישור ל־<span dir="ltr">${esc(email)}</span></b><p class="ink-2" style="margin:6px 0 0">פותחים את המייל ולוחצים על הקישור. אם הוא לא הגיע תוך דקה, כדאי לבדוק בתיקיית הספאם.</p></div>`;
+    } catch (ex) {
+      btn.disabled = false;
+      err.textContent = /rate|seconds/i.test(ex.message) ? 'נשלחו כבר כמה קישורים. כדאי לחכות דקה ולנסות שוב.' : 'לא הצלחנו לשלוח את הקישור: ' + ex.message;
+    }
+  };
+  app.querySelector('#lg-demo').onclick = () => { localStorage.setItem('casa-mode', 'demo'); location.href = location.pathname; };
+}
+
+function noProjectView() {
+  return `<div class="login-panel" style="min-height:100vh"><div class="login-box">${wordmark('lg')}
+    <h1>עוד אין פרויקט משויך</h1>
+    <p class="lede">נכנסת עם <span dir="ltr">${esc(Live.user ? Live.user.email : '')}</span>, אבל המייל הזה עדיין לא מחובר לפרויקט. אם קיבלתם הזמנה למייל אחר, צריך להיכנס איתו. אפשר גם לפנות לצוות קאסה פואבלו.</p>
+    <button class="btn btn-ghost" id="np-out">יציאה</button></div></div>`;
 }
 
 function mountLogin(app) {
@@ -128,6 +182,8 @@ function mountLogin(app) {
     login('client');
   };
   app.querySelectorAll('[data-demo]').forEach((b) => (b.onclick = () => login(b.dataset.demo)));
+  const real = app.querySelector('#lg-real');
+  if (real) real.onclick = () => { localStorage.removeItem('casa-mode'); location.href = location.pathname; };
   app.querySelector('#lg-forgot').onclick = () => openModal({
     title: 'איפוס סיסמה',
     body: `<p class="ink-2" style="margin-top:0">נשלח קישור לאיפוס הסיסמה למייל או לטלפון שרשומים אצלנו.</p>
@@ -142,7 +198,16 @@ function login(role) {
   Store.save();
   App.go(role === 'staff' ? 'bo-home' : 'home');
 }
-function logout() {
+async function logout() {
+  if (Store.live) {
+    await Live.signOut();
+    Store.session = null;
+    Store.data = null;
+    try { localStorage.removeItem(LIVE_SESSION_KEY); } catch (e) { /* ignore */ }
+    location.hash = '';
+    App.render();
+    return;
+  }
   Store.session = null;
   Store.save();
   location.hash = '';
@@ -184,7 +249,7 @@ function clientMasthead(page, unread, tasks, staffSession) {
       <a class="icon-btn" href="#/notifications" aria-label="התראות${unread ? `, ${unread} חדשות` : ''}">${icon('bell')}${unread ? `<span class="badge-dot">${unread}</span>` : ''}</a>
       <button class="icon-btn" id="nav-mode" aria-label="תפריט צד במקום טאבים" title="תפריט צד במקום טאבים">${icon('sidebar')}</button>
       ${staffSession ? `<button class="icon-btn" id="switch-view" aria-label="חזרה ל-Back Office" title="חזרה ל-Back Office">${icon('grid')}</button>` : ''}
-      <div class="who"><span class="avatar">${initials('אורי אברהמי')}</span><span>אורי אברהמי</span></div>
+      <div class="who"><span class="avatar">${initials(currentUserName())}</span><span>${esc(currentUserName())}</span></div>
       <button class="icon-btn" id="logout" aria-label="יציאה">${icon('logout')}</button>
     </div>
     <div class="navtabs-wrap">
@@ -240,7 +305,7 @@ function shellView(page, view, staff) {
     : `<nav>${CLIENT_NAV.map((n) => navLink(n, page)).join('')}</nav>
        <div class="nav-group">רכיבים רוחביים</div>
        <nav>${navLink(CLIENT_EXTRA[0], page, tasks)}${navLink(CLIENT_EXTRA[1], page, unread)}</nav>`;
-  const who = staff ? TEAM.pm.name : 'אורי אברהמי';
+  const who = Store.live ? currentUserName() : staff ? TEAM.pm.name : 'אורי אברהמי';
   return `
   <div class="shell">
     <aside class="sidebar" aria-label="תפריט ראשי">
@@ -249,7 +314,7 @@ function shellView(page, view, staff) {
       <div class="side-foot">
         ${!staff ? `<button class="btn btn-sm" style="background:rgba(255,255,255,.08);color:#fff;width:100%;margin-bottom:10px" id="nav-mode">${icon('layout')}תפריט טאבים למעלה</button>` : ''}
         ${staffSession ? `<button class="btn btn-sm" style="background:rgba(255,255,255,.1);color:#fff;width:100%;margin-bottom:10px" id="switch-view">${staff ? 'צפייה כלקוח' : 'חזרה ל-Back Office'}</button>` : ''}
-        <button class="btn btn-sm" style="background:transparent;color:#c7d2e0;padding:0" id="reset-demo">איפוס נתוני ההדגמה</button>
+        ${Store.live ? '' : '<button class="btn btn-sm" style="background:transparent;color:#c7d2e0;padding:0" id="reset-demo">איפוס נתוני ההדגמה</button>'}
       </div>
     </aside>
     <div class="content">
@@ -284,6 +349,7 @@ function staffTabbar(page) {
 }
 
 function resetLink() {
+  if (Store.live) return `<footer class="site-foot"><span>CASA PUEBLO · הבית שלכם, המקצוענות שלנו.</span></footer>`;
   return `<footer class="site-foot"><span>CASA PUEBLO · הבית שלכם, המקצוענות שלנו.</span><button class="link-btn" id="reset-demo">איפוס נתוני ההדגמה</button></footer>`;
 }
 
@@ -304,7 +370,8 @@ function bindShell(app) {
     Store.save();
     App.go(Store.session.view === 'staff' ? 'bo-project' : 'home');
   };
-  app.querySelector('#reset-demo').onclick = () => {
+  const rd = app.querySelector('#reset-demo');
+  if (rd) rd.onclick = () => {
     if (!confirm('לאפס את כל השינויים שנעשו בהדגמה?')) return;
     Store.reset();
     toast('נתוני ההדגמה אופסו');
@@ -327,12 +394,13 @@ function openMore() {
     </div>
     <hr class="sep">
     ${staffSession ? `<button class="btn btn-ghost btn-block" id="mv-staff" style="margin-bottom:8px">חזרה ל-Back Office</button>` : ''}
-    <button class="btn btn-quiet btn-block" id="mv-reset">איפוס נתוני ההדגמה</button>`,
+    ${Store.live ? '' : '<button class="btn btn-quiet btn-block" id="mv-reset">איפוס נתוני ההדגמה</button>'}`,
     onOpen(el) {
       el.querySelectorAll('.more-sheet a').forEach((a) => a.addEventListener('click', () => closeModal()));
       const s = el.querySelector('#mv-staff');
       if (s) s.onclick = () => { closeModal(); Store.session.view = 'staff'; Store.save(); App.go('bo-project'); };
-      el.querySelector('#mv-reset').onclick = () => { if (confirm('לאפס את כל השינויים שנעשו בהדגמה?')) { Store.reset(); closeModal(); toast('נתוני ההדגמה אופסו'); App.render(); } };
+      const mr = el.querySelector('#mv-reset');
+      if (mr) mr.onclick = () => { if (confirm('לאפס את כל השינויים שנעשו בהדגמה?')) { Store.reset(); closeModal(); toast('נתוני ההדגמה אופסו'); App.render(); } };
     },
   });
 }
@@ -372,6 +440,26 @@ function searchResults(term) {
 }
 
 /* ---------- boot ---------- */
+async function bootLive() {
+  Store.live = true;
+  Store.load();
+  document.getElementById('app').innerHTML = '<div class="login-panel" style="min-height:100vh"><p class="ink-2">טוען…</p></div>';
+  let ok = false;
+  try { ok = await Live.init(); } catch (e) { toast('אין חיבור למערכת: ' + e.message); }
+  if (!ok) { Store.session = null; App.render(); return; }
+  const staff = Live.user.staff;
+  const prev = Store.session || {};
+  Store.session = { role: staff ? 'staff' : 'client', view: staff ? (prev.view || 'staff') : 'client', nav: prev.nav || 'tabs', pid: prev.pid };
+  await Live.open(prev.pid);
+  if (!Store.data && staff) { Store.data = emptyProjectData({}); Store.data.portfolio = []; Store.data.empty = true; }
+  try { localStorage.setItem(LIVE_SESSION_KEY, JSON.stringify(Store.session)); } catch (e) { /* ignore */ }
+  App.render();
+}
+window.addEventListener('beforeunload', (e) => { if (Store.live && (Live.dirty || Live.saving)) { Live.flush(); e.preventDefault(); e.returnValue = ''; } });
+if (Live.enabled()) {
+  window.addEventListener('hashchange', () => { closeAllModals(); App.render(); });
+  bootLive();
+} else {
 Store.load();
 // ?as=client / ?as=staff opens the demo straight in that role (handy for presentations).
 (() => {
@@ -380,5 +468,6 @@ Store.load();
   if (as === 'client' || as === 'staff') { Store.session = { role: as, view: as, nav: nav === 'side' ? 'side' : 'tabs' }; Store.save(); }
 })();
 window.addEventListener('hashchange', () => { closeAllModals(); App.render(); });
-function closeAllModals() { while (modalStack.length) closeModal(); }
 App.render();
+}
+function closeAllModals() { while (modalStack.length) closeModal(); }

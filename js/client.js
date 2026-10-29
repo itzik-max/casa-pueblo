@@ -99,7 +99,7 @@ function openLightbox(items, start = 0) {
       <div class="lb-top"><span class="t">${esc(it.title || '')}</span><span class="n">${i + 1} / ${items.length}</span>
         <button class="icon-btn" data-x aria-label="סגירה">${icon('close')}</button></div>
       <div class="lb-stage">
-        <img src="${esc(it.src)}" alt="${esc(it.title || '')}">
+        <img src="${esc(media(it.src))}" alt="${esc(it.title || '')}">
         ${items.length > 1 ? `<button class="nav prev" data-step="-1" aria-label="הקודמת">${icon('back')}</button><button class="nav next" data-step="1" aria-label="הבאה">${icon('chevron')}</button>` : ''}
       </div>`;
   };
@@ -169,7 +169,7 @@ Pages.home = () => {
     title: 'ראשי',
     html: `
       <section class="lux-hero">
-        <div class="bg" style="background-image:url('${esc(p.image)}')" role="img" aria-label="${esc(p.name)}"></div>
+        <div class="bg" style="background-image:url('${esc(media(p.image))}')" role="img" aria-label="${esc(p.name)}"></div>
         <div class="inner">
           <span class="eyebrow">${esc(p.name)} · ${esc(p.address.split(',').pop().trim())}</span>
           <h1>שלום משפחת ${esc(p.family)}</h1>
@@ -205,11 +205,11 @@ Pages.home = () => {
             <span class="sig">${esc(pm.name.split(' ')[0])}</span>
           </div>
         </div>
-        <button class="lux photo" data-lbhome="0" aria-label="תמונת השבוע">
-          <img src="${esc(latest.photos[0])}" alt="" loading="lazy">
+        ${latest && latest.photos.length ? `<button class="lux photo" data-lbhome="0" aria-label="תמונת השבוע">
+          <img src="${esc(media(latest.photos[0]))}" alt="" loading="lazy">
           <span class="tag">מהשטח השבוע</span>
           <span class="cap"><b>${esc(latest.title)}</b>${fmtDate(latest.date)}</span>
-        </button>
+        </button>` : ''}
       </article>
 
       <div class="stat-strip" style="margin-top:34px">
@@ -247,7 +247,7 @@ Pages.home = () => {
 
       <section style="margin-top:64px">
         <div class="section-title"><div><span class="eyebrow">מהשטח</span><h2 style="margin-top:8px">התמונות האחרונות</h2></div><a class="link-btn" href="#/photos">ליומן הפרויקט</a></div>
-        <div class="mosaic">${gallery.map((g, i) => `<button class="lux" data-lbg="${i}" aria-label="${esc(g.title)}"><img src="${esc(g.src)}" alt="" loading="lazy"><span class="cap"><b>${esc(g.title)}</b>${esc(g.sub)}</span></button>`).join('')}</div>
+        <div class="mosaic">${gallery.map((g, i) => `<button class="lux" data-lbg="${i}" aria-label="${esc(g.title)}"><img src="${esc(media(g.src))}" alt="" loading="lazy"><span class="cap"><b>${esc(g.title)}</b>${esc(g.sub)}</span></button>`).join('')}</div>
       </section>
 
       ${aboutSection()}`,
@@ -347,21 +347,31 @@ function openPlan(id) {
         <div class="small ink-2">${esc(plan.cat)} · הועלתה ${fmtDate(v.date)} ע״י ${esc(v.by)} · ${v.file} ${v.size}</div>
         ${statusPill(plan.status)}
       </div>
-      <div class="plan-viewer">${planSketch(plan.title, v.v, seed)}</div>
+      <div class="plan-viewer">${planPreview(v) || planSketch(plan.title, v.v, seed)}</div>
       ${v.note ? `<div class="tl-note">מה השתנה בגרסה: ${esc(v.note)}</div>` : ''}
       <h3 style="margin:18px 0 4px;font-size:15px;color:var(--navy)">היסטוריית גרסאות</h3>
       <p class="small muted" style="margin:0 0 6px">גרסאות קודמות לא נמחקות, ותמיד אפשר לחזור אליהן.</p>
       <ul class="version-list">
-        ${plan.versions.map((x, i) => `<li><span class="v">V${x.v}</span><span class="d">${fmtDate(x.date)} · ${esc(x.by)}${x.note ? ` · ${esc(x.note)}` : ''}</span>${i === 0 ? pill('blue', 'נוכחית') : '<button class="btn btn-sm btn-quiet">צפייה</button>'}</li>`).join('')}
+        ${plan.versions.map((x, i) => `<li><span class="v">V${x.v}</span><span class="d">${fmtDate(x.date)} · ${esc(x.by)}${x.note ? ` · ${esc(x.note)}` : ''}</span>${i === 0 ? pill('blue', 'נוכחית') : `<button class="btn btn-sm btn-quiet" data-ver="${i}">צפייה</button>`}</li>`).join('')}
       </ul>`,
     foot: `${plan.status === 'pending' ? `<button class="btn btn-primary" id="pv-approve">${icon('check')}לאישור התכנית</button>` : ''}
       <button class="btn btn-ghost" id="pv-dl">${icon('download')}הורדה</button>`,
     onOpen(el) {
       const a = el.querySelector('#pv-approve');
       if (a) a.onclick = () => { closeModal(); approvePlanFlow(id); };
-      el.querySelector('#pv-dl').onclick = () => toast('בגרסה המלאה יורד כאן קובץ התכנית');
+      el.querySelector('#pv-dl').onclick = () => { if (!openFile(v.path)) toast('בגרסה המלאה יורד כאן קובץ התכנית'); };
+      el.querySelectorAll('[data-ver]').forEach((b) => (b.onclick = () => { if (!openFile(plan.versions[+b.dataset.ver].path)) toast('לגרסה הזאת אין קובץ במערכת'); }));
     },
   });
+}
+
+// The real file inside the viewer: PDF in a frame, image as is. Other types (DWG, XLS) open with "הורדה".
+function planPreview(v) {
+  const url = media(v.path);
+  if (!url) return '';
+  if (/^(PDF)$/i.test(v.file)) return `<iframe src="${esc(url)}" title="תכנית" style="width:100%;height:70vh;border:0;background:#fff"></iframe>`;
+  if (/^(JPG|JPEG|PNG|WEBP|GIF)$/i.test(v.file)) return `<img src="${esc(url)}" alt="" style="width:100%;height:auto">`;
+  return '';
 }
 
 Pages.plans = (q) => {
@@ -410,7 +420,7 @@ function isDark(hex) {
   return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) < 120;
 }
 function matVisual(m, cls = 'ph') {
-  return m.img ? `<span class="lux ${cls}"><img src="${esc(m.img)}" alt="" loading="lazy"></span>` : `<div class="${cls} swatch" style="background-color:${esc(m.swatch || "#ddd")}"><span class="sw-name${isDark(m.swatch) ? " light" : ""}">${esc(m.color || m.name)}</span></div>`;
+  return m.img ? `<span class="lux ${cls}"><img src="${esc(media(m.img))}" alt="" loading="lazy"></span>` : `<div class="${cls} swatch" style="background-color:${esc(m.swatch || "#ddd")}"><span class="sw-name${isDark(m.swatch) ? " light" : ""}">${esc(m.color || m.name)}</span></div>`;
 }
 function openMaterial(id) {
   const d = Store.data;
@@ -553,7 +563,7 @@ Pages.timeline = () => {
                 <div><div class="k">סיום בפועל</div><div class="v">${fmtDate(s.ae)}</div></div>
               </div>
               ${s.note ? `<div class="tl-note">${esc(s.note)}</div>` : ''}
-              ${s.photos.length ? `<div class="tl-photos">${s.photos.map((src) => `<img src="${esc(src)}" alt="" data-src="${esc(src)}" loading="lazy">`).join('')}</div>` : ''}
+              ${s.photos.length ? `<div class="tl-photos">${s.photos.map((src) => `<img src="${esc(media(src))}" alt="" data-src="${esc(media(src))}" loading="lazy">`).join('')}</div>` : ''}
             </article>
           </li>`).join('')}
       </ol>`,
@@ -574,8 +584,8 @@ Pages.timeline = () => {
 // Before on the right (read first in RTL), after on the left; dragging reveals more of the after.
 function baSlider(before, after) {
   return `<div class="ba" id="ba">
-    <img src="${esc(after)}" alt="אחרי">
-    <div class="clip" style="clip-path: inset(0 0 0 50%)"><img class="before" src="${esc(before)}" alt="לפני"></div>
+    <img src="${esc(media(after))}" alt="אחרי">
+    <div class="clip" style="clip-path: inset(0 0 0 50%)"><img class="before" src="${esc(media(before))}" alt="לפני"></div>
     <span class="handle" style="left:50%"></span>
     <span class="tag b">לפני</span><span class="tag a">אחרי</span>
     <input type="range" min="0" max="100" value="50" aria-label="השוואת לפני ואחרי">
@@ -591,7 +601,7 @@ function bindBA(root) {
   };
 }
 function luxImg(src, i, cap = '', sub = '') {
-  return `<button class="lux" data-lb="${i}" aria-label="הגדלת תמונה${cap ? ': ' + esc(cap) : ''}"><img src="${esc(src)}" alt="" loading="lazy">${cap ? `<span class="cap"><b>${esc(cap)}</b>${esc(sub)}</span>` : ''}</button>`;
+  return `<button class="lux" data-lb="${i}" aria-label="הגדלת תמונה${cap ? ': ' + esc(cap) : ''}"><img src="${esc(media(src))}" alt="" loading="lazy">${cap ? `<span class="cap"><b>${esc(cap)}</b>${esc(sub)}</span>` : ''}</button>`;
 }
 
 Pages.photos = (q) => {
@@ -656,12 +666,15 @@ Pages.documents = (q) => {
         ${list.map((x) => `<li class="row">
           ${fileIco(x.type)}
           <div class="main-col"><div class="title">${esc(x.title)}</div><div class="sub">${esc(x.cat)} · ${fmtDate(x.date)} · ${x.size}${x.expense ? ' · מקושר להוצאה' : ''}</div></div>
-          <div class="end"><button class="btn btn-sm btn-ghost" data-view="${x.id}">${icon('eye')}צפייה</button><button class="icon-btn" aria-label="הורדה" data-dl>${icon('download')}</button></div>
+          <div class="end"><button class="btn btn-sm btn-ghost" data-view="${x.id}">${icon('eye')}צפייה</button><button class="icon-btn" aria-label="הורדה" data-dl="${x.id}">${icon('download')}</button></div>
         </li>`).join('')}
       </ul></div>`,
     mount(root) {
       root.querySelectorAll('[data-cat]').forEach((b) => (b.onclick = () => App.go('documents', { cat: b.dataset.cat })));
-      root.querySelectorAll('[data-view],[data-dl]').forEach((b) => (b.onclick = () => toast('בגרסה המלאה הקובץ נפתח כאן')));
+      root.querySelectorAll('[data-view],[data-dl]').forEach((b) => (b.onclick = () => {
+        const doc = d.documents.find((x) => x.id === (b.dataset.view || b.dataset.dl));
+        if (!openFile(doc && doc.path)) toast(Store.live ? 'למסמך הזה לא צורף קובץ' : 'בגרסה המלאה הקובץ נפתח כאן');
+      }));
       root.querySelector('#doc-up').onclick = () => uploadDocFlow();
     },
   };
@@ -675,11 +688,15 @@ function uploadDocFlow() {
       <label class="field"><span>קטגוריה</span><select class="input" id="ud-cat">${DOC_CATEGORIES.map((c) => `<option>${c}</option>`).join('')}</select></label>`,
     foot: `<button class="btn btn-primary" id="ud-save">${icon('upload')}העלאה</button>`,
     onOpen(el) {
-      el.querySelector('#ud-save').onclick = () => {
+      el.querySelector('#ud-save').onclick = async (ev) => {
         const f = el.querySelector('#ud-file').files[0];
+        if (Store.live && !f) { el.querySelector('#ud-file').focus(); return toast('צריך לבחור קובץ'); }
+        ev.target.disabled = true;
+        let path = '';
+        try { path = await storeFile(f); } catch (e) { ev.target.disabled = false; return; }
         const title = el.querySelector('#ud-title').value.trim() || (f && f.name) || 'מסמך חדש';
         const ext = f ? (f.name.split('.').pop() || 'PDF').toUpperCase().slice(0, 4) : 'PDF';
-        Store.data.documents.unshift({ id: 'd' + Date.now(), cat: el.querySelector('#ud-cat').value, title, date: TODAY, type: ext, size: f ? (f.size / 1048576).toFixed(1) + 'MB' : '—' });
+        Store.data.documents.unshift({ id: 'd' + Date.now(), cat: el.querySelector('#ud-cat').value, title, date: TODAY, type: ext, size: f ? (f.size / 1048576).toFixed(1) + 'MB' : '—', path });
         Store.log(`העלה מסמך: ${title}`);
         Store.save();
         closeModal();
@@ -770,11 +787,15 @@ function newTicketFlow() {
       <label class="field"><span>תמונה</span><input class="input" type="file" accept="image/*" capture="environment"></label>`,
     foot: `<button class="btn btn-primary" id="tk-send">${icon('send')}שליחה</button>`,
     onOpen(el) {
-      el.querySelector('#tk-send').onclick = () => {
+      el.querySelector('#tk-send').onclick = async (ev) => {
         const title = el.querySelector('#tk-title').value.trim();
         if (!title) { el.querySelector('#tk-title').focus(); return; }
-        const no = Math.max(...Store.data.tickets.map((t) => t.no)) + 1;
-        Store.data.tickets.unshift({ id: 't' + Date.now(), no, title, date: TODAY, status: 'חדש', cat: el.querySelector('#tk-cat').value, by: currentUserName(), reply: '' });
+        ev.target.disabled = true;
+        let photo = '';
+        const pf = el.querySelector('input[type=file]').files[0];
+        try { photo = await storeFile(pf && await shrinkImage(pf)); } catch (e) { ev.target.disabled = false; return; }
+        const no = Math.max(1000, ...Store.data.tickets.map((t) => t.no)) + 1;
+        Store.data.tickets.unshift({ id: 't' + Date.now(), no, title, desc: el.querySelector('#tk-desc').value.trim(), photo, date: TODAY, status: 'חדש', cat: el.querySelector('#tk-cat').value, by: currentUserName(), reply: '' });
         Store.log(`פתח פניית שירות #${no}: ${title}`);
         Store.save();
         closeModal();
