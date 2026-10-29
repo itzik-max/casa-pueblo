@@ -2,7 +2,10 @@
 
 ## כללים
 - **שפה: עברית בלבד.** כל הודעה לאיציק בעברית: תשובות, עדכוני ביניים, סיכומים ושאלות. גם אחרי רצף ארוך של פעולות טכניות, וגם כשהכלים והתיעוד באנגלית. לפני שליחה בודקים שההודעה בעברית. באנגלית נשארים רק קוד, שמות קבצים, פקודות והודעות commit.
-- **שמירה והעלאה:** אחרי כל שינוי שעובד, commit ו־`git push origin main main:gh-pages` (האתר מוגש מהענף `gh-pages`).
+- **שמירה והעלאה:** אחרי כל שינוי שעובד, commit, ואז דוחפים לשני הריפואים:
+  - `git push origin main main:gh-pages`: הריפו הציבורי `casa-pueblo`, שממנו מוגש האתר (הענף `gh-pages`).
+  - `git push private main`: הריפו הפרטי `itzik-max/casa-portal`, העותק המלא לעבודה מכל מחשב.
+  - במחשב חדש: `git clone https://github.com/itzik-max/casa-portal.git`, ואז מוסיפים את הריפו הציבורי: `git remote add site https://github.com/itzik-max/casa-pueblo.git`. משם הדחיפה לאתר היא `git push site main main:gh-pages`.
 - **האתר ציבורי ומשותף עם ג'ורג' מקאסה פואבלו.** כל קובץ בריפו נגיש באתר, אז לא מכניסים סודות.
 
 ## מה זה
