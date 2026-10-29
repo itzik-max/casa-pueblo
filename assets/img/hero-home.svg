@@ -1,0 +1,219 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#17284a"/>
+      <stop offset=".42" stop-color="#46557a"/>
+      <stop offset=".7" stop-color="#c4948a"/>
+      <stop offset=".86" stop-color="#efc496"/>
+      <stop offset="1" stop-color="#f8dcae"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="330" cy="610" r="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff1d2" stop-opacity=".9"/>
+      <stop offset=".35" stop-color="#f6cf98" stop-opacity=".45"/>
+      <stop offset="1" stop-color="#f6cf98" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lawn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8aa461"/>
+      <stop offset=".35" stop-color="#6c8a4b"/>
+      <stop offset="1" stop-color="#2f4128"/>
+    </linearGradient>
+    <linearGradient id="win" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe7ad"/>
+      <stop offset="1" stop-color="#eeac58"/>
+    </linearGradient>
+    <linearGradient id="wallA" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f8eedf"/>
+      <stop offset="1" stop-color="#e7d8c2"/>
+    </linearGradient>
+    <linearGradient id="path" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e6d2ad"/>
+      <stop offset="1" stop-color="#b99c74"/>
+    </linearGradient>
+  </defs>
+
+  <!-- שמיים -->
+  <rect width="1200" height="700" fill="url(#sky)"/>
+  <g fill="#fff">
+    <circle cx="140" cy="90" r="1.6" opacity=".7"/>
+    <circle cx="420" cy="60" r="1.2" opacity=".6"/>
+    <circle cx="690" cy="120" r="1.8" opacity=".7"/>
+    <circle cx="930" cy="70" r="1.3" opacity=".6"/>
+    <circle cx="1080" cy="160" r="1.5" opacity=".5"/>
+    <circle cx="260" cy="200" r="1.1" opacity=".5"/>
+    <circle cx="820" cy="220" r="1.2" opacity=".4"/>
+  </g>
+  <rect width="1200" height="700" fill="url(#glow)"/>
+  <circle cx="330" cy="610" r="64" fill="#fde9c2"/>
+
+  <!-- ציפורים -->
+  <g fill="none" stroke="#2b3240" stroke-width="2.5" stroke-linecap="round" opacity=".7">
+    <path d="M610 330 q8 -8 16 0 q8 -8 16 0"/>
+    <path d="M660 300 q6 -6 12 0 q6 -6 12 0"/>
+    <path d="M700 345 q5 -5 10 0 q5 -5 10 0"/>
+  </g>
+
+  <!-- גבעות -->
+  <path d="M0 640 Q200 588 420 624 T820 606 T1200 628 V700 H0Z" fill="#9a8590" opacity=".6"/>
+  <path d="M0 668 Q260 628 520 660 T1000 648 T1200 666 V700 H0Z" fill="#6f7c5b"/>
+
+  <!-- דשא -->
+  <rect y="680" width="1200" height="320" fill="url(#lawn)"/>
+  <path d="M0 690 Q300 700 600 692 T1200 694 V708 Q900 716 600 708 T0 706Z" fill="#9db26f" opacity=".45"/>
+
+  <!-- שיחים וברושים מאחורי הבית -->
+  <ellipse cx="1075" cy="590" rx="24" ry="120" fill="#3e5034"/>
+  <ellipse cx="1112" cy="620" rx="18" ry="88" fill="#34452d"/>
+  <ellipse cx="575" cy="610" rx="18" ry="92" fill="#3e5034"/>
+  <g fill="#4d6440">
+    <ellipse cx="600" cy="735" rx="44" ry="20"/>
+    <ellipse cx="1060" cy="735" rx="52" ry="22"/>
+    <ellipse cx="1110" cy="740" rx="40" ry="18"/>
+  </g>
+
+  <!-- צל הבית -->
+  <ellipse cx="840" cy="748" rx="270" ry="14" fill="#22301c" opacity=".35"/>
+
+  <!-- ארובה -->
+  <rect x="775" y="428" width="26" height="50" fill="#c79f7c"/>
+  <rect x="771" y="422" width="34" height="9" fill="#8d3f22"/>
+
+  <!-- חלק א: בית עם גג רעפים -->
+  <rect x="600" y="505" width="230" height="240" fill="url(#wallA)"/>
+  <polygon points="578,512 715,402 852,512" fill="#b5562f"/>
+  <polygon points="715,402 852,512 800,512" fill="#9c4826"/>
+  <g stroke="#8d3f22" stroke-width="2" opacity=".5">
+    <line x1="612" y1="485" x2="818" y2="485"/>
+    <line x1="640" y1="462" x2="790" y2="462"/>
+    <line x1="668" y1="440" x2="762" y2="440"/>
+  </g>
+  <rect x="578" y="508" width="274" height="10" fill="#7c3519"/>
+
+  <!-- חלונות קומה עליונה -->
+  <g stroke="#3b2f2a" stroke-width="4">
+    <path d="M636 612 V568 a27 27 0 0 1 54 0 V612Z" fill="url(#win)"/>
+    <path d="M740 612 V568 a27 27 0 0 1 54 0 V612Z" fill="url(#win)"/>
+    <line x1="663" y1="541" x2="663" y2="612"/>
+    <line x1="767" y1="541" x2="767" y2="612"/>
+    <line x1="636" y1="580" x2="690" y2="580"/>
+    <line x1="740" y1="580" x2="794" y2="580"/>
+  </g>
+  <rect x="630" y="612" width="66" height="7" fill="#c9b293"/>
+  <rect x="734" y="612" width="66" height="7" fill="#c9b293"/>
+
+  <!-- דלת וחלון קומת קרקע -->
+  <path d="M690 745 V678 a26 26 0 0 1 52 0 V745Z" fill="#6b3b22"/>
+  <path d="M697 745 V680 a19 19 0 0 1 38 0 V745Z" fill="#7d4729"/>
+  <circle cx="727" cy="710" r="3" fill="#d4b483"/>
+  <rect x="626" y="660" width="44" height="54" fill="url(#win)" stroke="#3b2f2a" stroke-width="4"/>
+  <line x1="648" y1="660" x2="648" y2="714" stroke="#3b2f2a" stroke-width="3"/>
+  <circle cx="770" cy="668" r="7" fill="#f6dca6"/>
+
+  <!-- עציצים ליד הדלת -->
+  <path d="M668 745 l4 -22 h16 l4 22Z" fill="#b5562f"/>
+  <ellipse cx="680" cy="716" rx="16" ry="14" fill="#5f7a45"/>
+  <path d="M752 745 l4 -22 h16 l4 22Z" fill="#b5562f"/>
+  <ellipse cx="764" cy="716" rx="16" ry="14" fill="#5f7a45"/>
+
+  <!-- חלק ב: אגף עם גג שטוח וחלון ויטרינה -->
+  <rect x="830" y="592" width="220" height="153" fill="#e3d4bd"/>
+  <rect x="818" y="578" width="246" height="16" fill="#2b3240"/>
+  <rect x="852" y="616" width="176" height="118" fill="url(#win)" stroke="#3b2f2a" stroke-width="4"/>
+  <g stroke="#3b2f2a" stroke-width="3">
+    <line x1="911" y1="616" x2="911" y2="734"/>
+    <line x1="970" y1="616" x2="970" y2="734"/>
+  </g>
+  <!-- מנורה תלויה ושולחן בתוך הבית -->
+  <line x1="940" y1="616" x2="940" y2="648" stroke="#3b2f2a" stroke-width="2"/>
+  <path d="M928 660 a12 12 0 0 1 24 0Z" fill="#3b2f2a"/>
+  <rect x="905" y="700" width="72" height="6" fill="#7d5a3c"/>
+  <rect x="912" y="706" width="5" height="28" fill="#7d5a3c"/>
+  <rect x="965" y="706" width="5" height="28" fill="#7d5a3c"/>
+  <rect x="840" y="742" width="200" height="6" fill="#c9b293"/>
+
+  <!-- שביל -->
+  <path d="M690 745 H742 L860 1000 H560Z" fill="url(#path)"/>
+  <g fill="#cbb48d" opacity=".7">
+    <ellipse cx="716" cy="770" rx="20" ry="4"/>
+    <ellipse cx="712" cy="815" rx="30" ry="6"/>
+    <ellipse cx="708" cy="875" rx="44" ry="8"/>
+    <ellipse cx="704" cy="950" rx="60" ry="10"/>
+  </g>
+
+  <!-- עץ זית -->
+  <path d="M498 748 C492 700 512 668 500 626 M500 668 C520 650 530 640 540 618 M500 690 C480 670 470 655 462 630" fill="none" stroke="#5a4636" stroke-width="12" stroke-linecap="round"/>
+  <g fill="#5f7148">
+    <ellipse cx="500" cy="590" rx="78" ry="48"/>
+    <ellipse cx="448" cy="618" rx="46" ry="30"/>
+    <ellipse cx="555" cy="610" rx="50" ry="32"/>
+    <ellipse cx="505" cy="556" rx="52" ry="30"/>
+  </g>
+  <g fill="#8c9c66" opacity=".75">
+    <ellipse cx="470" cy="572" rx="38" ry="20"/>
+    <ellipse cx="438" cy="608" rx="24" ry="14"/>
+    <ellipse cx="500" cy="545" rx="28" ry="14"/>
+  </g>
+  <ellipse cx="520" cy="752" rx="80" ry="10" fill="#22301c" opacity=".3"/>
+
+  <!-- עפיפון -->
+  <path d="M385 672 Q440 520 470 268" fill="none" stroke="#f6f0e6" stroke-width="1.6" opacity=".7"/>
+  <polygon points="470,214 502,262 470,322 438,262" fill="#b5562f"/>
+  <polygon points="470,214 502,262 470,262" fill="#cf6a3e"/>
+  <polygon points="438,262 470,322 470,262" fill="#97431f"/>
+  <path d="M470 322 q-14 18 0 34 q14 18 -4 36 q-14 16 -2 34" fill="none" stroke="#d4b483" stroke-width="2"/>
+  <g fill="#d4b483">
+    <polygon points="462,344 478,350 462,356"/>
+    <polygon points="458,384 474,390 458,396"/>
+    <polygon points="460,420 476,426 460,432"/>
+  </g>
+
+  <!-- כלב -->
+  <ellipse cx="252" cy="814" rx="36" ry="6" fill="#1b2616" opacity=".35"/>
+  <g stroke="#8a5a36" stroke-width="6" stroke-linecap="round" fill="none">
+    <path d="M268 790 L286 804"/>
+    <path d="M262 792 L270 810"/>
+    <path d="M238 790 L220 804"/>
+    <path d="M242 792 L234 810"/>
+    <path d="M226 780 Q214 770 204 772"/>
+  </g>
+  <ellipse cx="250" cy="784" rx="28" ry="12" fill="#a06a40"/>
+  <circle cx="278" cy="770" r="11" fill="#a06a40"/>
+  <ellipse cx="290" cy="774" rx="8" ry="5" fill="#a06a40"/>
+  <path d="M272 762 q-6 4 -4 14" stroke="#6e4527" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <circle cx="296" cy="772" r="2.5" fill="#2b2420"/>
+
+  <!-- ילד עם העפיפון -->
+  <ellipse cx="340" cy="822" rx="36" ry="6" fill="#1b2616" opacity=".35"/>
+  <g stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M338 770 L318 795 L300 792" stroke="#2b3a55" stroke-width="12"/>
+    <path d="M338 770 L358 795 L366 818" stroke="#2b3a55" stroke-width="12"/>
+    <path d="M346 732 L322 752 L310 745" stroke="#d9a47c" stroke-width="9"/>
+    <path d="M348 722 L338 772" stroke="#b5562f" stroke-width="22"/>
+    <path d="M347 728 L368 705 L385 672" stroke="#d9a47c" stroke-width="9"/>
+  </g>
+  <circle cx="352" cy="703" r="15" fill="#d9a47c"/>
+  <path d="M338 700 a15 15 0 0 1 29 -2 q-8 -4 -16 -2 q-8 1 -13 4Z" fill="#3a2a20"/>
+
+  <!-- ילדה רצה -->
+  <ellipse cx="450" cy="804" rx="28" ry="5" fill="#1b2616" opacity=".35"/>
+  <g stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M444 770 L432 790 L420 786" stroke="#d9a47c" stroke-width="8"/>
+    <path d="M454 770 L464 800" stroke="#d9a47c" stroke-width="8"/>
+    <path d="M452 733 L472 722 L482 705" stroke="#d9a47c" stroke-width="7"/>
+    <path d="M452 733 L433 724 L425 710" stroke="#d9a47c" stroke-width="7"/>
+  </g>
+  <path d="M446 726 h14 l14 48 h-42Z" fill="#d4b483"/>
+  <circle cx="455" cy="712" r="12" fill="#d9a47c"/>
+  <path d="M443 710 a12 12 0 0 1 24 -2 q-12 -6 -24 2Z" fill="#5a3a24"/>
+  <circle cx="440" cy="706" r="7" fill="#5a3a24"/>
+
+  <!-- פרחים בקדמת התמונה -->
+  <g>
+    <circle cx="560" cy="860" r="5" fill="#f3d9a4"/>
+    <circle cx="590" cy="880" r="4" fill="#e7a06f"/>
+    <circle cx="880" cy="850" r="5" fill="#f3d9a4"/>
+    <circle cx="910" cy="872" r="4" fill="#e7a06f"/>
+    <circle cx="940" cy="845" r="4" fill="#f6f0e6"/>
+    <circle cx="200" cy="860" r="4" fill="#f6f0e6"/>
+    <circle cx="160" cy="880" r="5" fill="#e7a06f"/>
+  </g>
+</svg>

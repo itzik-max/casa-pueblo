@@ -82,7 +82,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 600; line-height: 1.25; }
 .login-visual {
   position: relative;
   min-height: 34vh;
-  background: url("../assets/img/hero-4.jpg") center/cover no-repeat;
+  background: #17284a url("../assets/img/hero-home.svg") center/cover no-repeat;
 }
 .login-visual::after {
   content: "";
@@ -115,6 +115,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 600; line-height: 1.25; }
 .demo-entries { margin-top: 26px; padding-top: 18px; border-top: 1px dashed var(--line-2); }
 .demo-entries .btn { width: 100%; justify-content: space-between; margin-top: 8px; }
 .demo-entries .tag { font-size: 12px; color: var(--muted); font-weight: 400; }
+.group-credit { margin: 22px 0 0; text-align: center; font-size: 12px; letter-spacing: .08em; color: var(--muted); }
 
 @media (min-width: 900px) {
   .login { grid-template-columns: 1.15fr 1fr; }

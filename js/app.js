@@ -76,7 +76,7 @@ const App = {
 function loginView() {
   return `
   <div class="login">
-    <div class="login-visual" role="img" aria-label="פרויקט של קאסה פואבלו">
+    <div class="login-visual" role="img" aria-label="איור: בית עם חצר וילדים רצים עם עפיפון">
       <div class="quote"><div class="serif">כל הבית. כל הפרויקט. במקום אחד.</div><p>הבית שלכם, המקצוענות שלנו.</p></div>
     </div>
     <div class="login-panel">
@@ -102,6 +102,7 @@ function loginView() {
           <button type="button" class="btn btn-ghost" data-demo="client"><span>כניסה כלקוח</span><span class="tag">משפחת אברהמי</span></button>
           <button type="button" class="btn btn-ghost" data-demo="staff"><span>כניסה כצוות קאסה פואבלו</span><span class="tag">Back Office</span></button>
         </div>
+        <p class="group-credit">מקבוצת אופטימו ק. בע"מ</p>
       </form>
     </div>
   </div>`;

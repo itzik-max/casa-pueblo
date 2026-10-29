@@ -500,8 +500,8 @@ body.theme-navy { overflow-x: clip; }
 .theme-navy .login-panel { background: var(--bg); }
 .theme-navy .login-box h1 { color: var(--ink); font-weight: 400; font-size: 34px; margin-top: 30px; }
 .theme-navy .login-box .lede { color: var(--ink-2); }
-.theme-navy .login-visual::after { background: linear-gradient(180deg, rgba(12, 23, 42, .1) 0%, rgba(12, 23, 42, .35) 55%, rgba(12, 23, 42, .92) 100%); }
-@media (min-width: 900px) { .theme-navy .login-visual::after { background: linear-gradient(270deg, rgba(12, 23, 42, 0) 40%, rgba(12, 23, 42, .9) 100%), linear-gradient(0deg, rgba(12, 23, 42, .7), transparent 50%); } }
+.theme-navy .login-visual::after { background: linear-gradient(180deg, rgba(12, 23, 42, 0) 0%, rgba(12, 23, 42, 0) 55%, rgba(12, 23, 42, .85) 100%); }
+@media (min-width: 900px) { .theme-navy .login-visual { background-position: 35% center; } .theme-navy .login-visual::after { background: linear-gradient(270deg, rgba(12, 23, 42, 0) 78%, rgba(12, 23, 42, .85) 100%), linear-gradient(0deg, rgba(12, 23, 42, .75), transparent 28%); } }
 .theme-navy .login-visual .quote .serif { font-weight: 400; }
 .theme-navy .demo-entries { border-color: var(--line-2); }
 .theme-navy .demo-entries .tag { color: var(--muted); }
