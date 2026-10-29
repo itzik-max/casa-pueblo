@@ -23,8 +23,28 @@ const Live = {
     const u = data.session.user;
     const { data: prof } = await this.sb.from('profiles').select('is_staff, is_admin, full_name').eq('id', u.id).maybeSingle();
     this.user = { id: u.id, email: u.email, name: (prof && prof.full_name) || u.email.split('@')[0], staff: !!(prof && prof.is_staff), admin: !!(prof && prof.is_admin) };
+    const { data: roles } = await this.sb.rpc('my_roles');
+    this.roles = Object.fromEntries((roles || []).map((r) => [r.project_id, r.role]));
     await this.loadRows();
     return true;
+  },
+
+  roles: {},
+  // The family's own designer gets the team's tools in her project.
+  isDesigner(pid) { return /^מעצב/.test(this.roles[pid] || ''); },
+  anyDesigner() { return Object.values(this.roles).some((r) => /^מעצב/.test(r)); },
+
+  async internalDocs(pid) {
+    const { data } = await this.sb.from('internal_docs').select('*').eq('project_id', pid).order('created_at', { ascending: false });
+    return data || [];
+  },
+  async addInternalDoc(doc) {
+    const { error } = await this.sb.from('internal_docs').insert(doc);
+    if (error) throw error;
+  },
+  async deleteInternalDoc(id) {
+    const { error } = await this.sb.from('internal_docs').delete().eq('id', id);
+    if (error) throw error;
   },
 
   async sendLink(email) {

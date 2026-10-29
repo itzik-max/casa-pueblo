@@ -149,12 +149,12 @@ Deno.serve(async (req) => {
       return json({ skipped: `hour ${now.hour}` });
     }
 
-    // From the Back Office ("שליחה עכשיו"): staff only.
+    // From the Back Office ("שליחה עכשיו"): Jorge only.
     const jwt = (req.headers.get('Authorization') || '').replace(/^Bearer /, '');
     const { data: u } = await sb.auth.getUser(jwt);
     if (!u?.user) return json({ error: 'not signed in' }, 401);
-    const { data: prof } = await sb.from('profiles').select('is_staff').eq('id', u.user.id).maybeSingle();
-    if (!prof?.is_staff) return json({ error: 'staff only' }, 403);
+    const { data: prof } = await sb.from('profiles').select('is_admin').eq('id', u.user.id).maybeSingle();
+    if (!prof?.is_admin) return json({ error: 'only Jorge sends the weekly summary' }, 403);
     if (body.mode === 'publish' && body.pid) return json(await publish(fri, body.pid));
     if (body.mode === 'review') return json(await review(fri));
     return json({ error: 'unknown mode' }, 400);

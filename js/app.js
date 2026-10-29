@@ -10,7 +10,7 @@ const CLIENT_NAV = [
   ['finance', 'finance', 'כספים ותשלומים'],
   ['documents', 'documents', 'מסמכים והסכמים'],
   ['pros', 'pros', 'בעלי מקצוע'],
-  ['service', 'service', 'שירות ואחריות'],
+  ['service', 'service', 'אחריות'],
 ];
 const CLIENT_EXTRA = [['todo', 'check', 'המטלות שלי'], ['tasks', 'tasks', 'משימות ואישורים'], ['notifications', 'bell', 'התראות']];
 const CLIENT_TABS = [['home', 'home', 'ראשי'], ['plans', 'plans', 'תכניות'], ['photos', 'photos', 'תמונות'], ['finance', 'finance', 'כספים']];
@@ -300,7 +300,7 @@ function shellView(page, view, staff) {
     </div>`;
   }
   const sidebar = staff
-    ? `<div class="nav-group">BACK OFFICE</div><nav>${STAFF_NAV.map((n) => navLink(n, page)).join('')}</nav>`
+    ? `<div class="nav-group">BACK OFFICE</div><nav>${STAFF_NAV.filter((n) => n[0] !== 'bo-new' || isJorge()).map((n) => navLink(n, page)).join('')}</nav>`
     : `<nav>${CLIENT_NAV.map((n) => navLink(n, page)).join('')}</nav>
        <div class="nav-group">רכיבים רוחביים</div>
        <nav>${navLink(CLIENT_EXTRA[0], page)}${navLink(CLIENT_EXTRA[1], page, tasks)}${navLink(CLIENT_EXTRA[2], page, unread)}</nav>`;
@@ -446,7 +446,7 @@ async function bootLive() {
   let ok = false;
   try { ok = await Live.init(); } catch (e) { toast('אין חיבור למערכת: ' + e.message); }
   if (!ok) { Store.session = null; App.render(); return; }
-  const staff = Live.user.staff;
+  const staff = Live.user.staff || Live.anyDesigner();
   const prev = Store.session || {};
   Store.session = { role: staff ? 'staff' : 'client', view: staff ? (prev.view || 'staff') : 'client', nav: prev.nav || 'tabs', pid: prev.pid };
   await Live.open(prev.pid);

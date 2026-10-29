@@ -1,6 +1,6 @@
 /* Shared UI helpers: state, formatting, icons, modal, toast, tooltip. */
 
-const STORE_KEY = 'casa-portal-demo-v6';
+const STORE_KEY = 'casa-portal-demo-v7';
 const LIVE_SESSION_KEY = 'casa-live-session';
 
 const Store = {
@@ -49,10 +49,22 @@ const Store = {
   },
 };
 
-// Plan execution status and plan categories: Jorge only (profiles.is_admin in the real system).
-function canApprovePlans() {
+// Permission levels (Itzik's permissions questionnaire, 29.10.2026). Enforced again in the database (save_project, RLS).
+// Jorge only: new project, project details, payments, changes, invitations, team, deleting documents, internal documents, sending the weekly summary.
+function isJorge() {
   if (Store.live) return !!(Live.user && Live.user.admin);
   return !!(Store.session && Store.session.role === 'staff');
+}
+// The team, or the family's own designer in her project: plan execution status, timeline, writing the weekly summary.
+function isProjectStaff() {
+  if (Store.live) return !!(Live.user && (Live.user.staff || Live.isDesigner(Store.data && Store.data.project.id)));
+  return !!(Store.session && Store.session.role === 'staff');
+}
+function canApprovePlans() { return isProjectStaff(); }
+// Who is shown as the uploader of a plan or a photo.
+function uploaderName(role = 'architect') {
+  if (Store.live || !App.isStaffView()) return currentUserName();
+  return TEAM[role].name;
 }
 
 function currentUserName() {

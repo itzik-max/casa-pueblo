@@ -104,12 +104,12 @@ Pages['bo-home'] = (q) => {
     title: 'דשבורד החברה',
     html: `
       <div class="page-head"><div><h1>כל הפרויקטים</h1><p>תמונת מצב של כל הפרויקטים הפעילים</p></div>
-        <a class="btn btn-accent" href="#/bo-new">${icon('plus')}פרויקט חדש</a></div>
+        ${isJorge() ? `<a class="btn btn-accent" href="#/bo-new">${icon('plus')}פרויקט חדש</a>` : ''}</div>
       <div class="kpis four">
         <div class="card stat"><div class="k">פרויקטים פעילים</div><div class="v">${active.length}</div></div>
         <div class="card stat"><div class="k">אישורים שממתינים ללקוחות</div><div class="v">${active.reduce((s, p) => s + p.pendingApprovals, 0)}</div></div>
         <div class="card stat alert"><div class="k">בעיכוב / בסיכון</div><div class="v">${active.filter((p) => p.schedule === 'delay' || p.schedule === 'risk').length}</div></div>
-        <div class="card stat"><div class="k">פניות שירות פתוחות</div><div class="v">${d.tickets.filter((t) => t.status !== 'נסגר').length}</div></div>
+        <div class="card stat"><div class="k">משימות פתוחות ללקוחות</div><div class="v">${active.reduce((s, p) => s + p.openTasks, 0)}</div></div>
       </div>
       <div class="toolbar" style="margin-top:16px">
         <input class="input search-input" type="search" id="bo-c" placeholder="חיפוש לקוח או פרויקט" value="${esc(f.c)}">
@@ -170,9 +170,11 @@ const PROJECT_ACTIONS = [
   ['payment', 'finance', 'עדכון תשלום'],
   ['change', 'plus', 'שינוי / תוספת'],
   ['pro', 'pros', 'הוספת בעל מקצוע'],
-  ['ticket', 'service', 'טיפול בפניית שירות'],
   ['member', 'users', 'הזמנת משתמש לפרויקט'],
 ];
+
+// Back Office actions only Jorge sees (permissions questionnaire).
+const JORGE_ACTIONS = ['details', 'payment', 'change', 'member'];
 
 const ACTIONS = {
   weekly() { App.go('bo-weekly'); },
@@ -270,7 +272,7 @@ const ACTIONS = {
         const f = v.file[0];
         const path = await storeFile(f);
         const id = 'pl' + Date.now();
-        Store.data.plans.unshift({ id, cat: v.cat, title: v.title, status: v.approve ? 'pending' : 'new', exec: 'draft', versions: [{ v: 1, date: TODAY, by: TEAM.architect.name, note: 'גרסה ראשונה', path, file: f ? f.name.split('.').pop().toUpperCase().slice(0, 4) : 'PDF', size: f ? (f.size / 1048576).toFixed(1) + 'MB' : '—' }] });
+        Store.data.plans.unshift({ id, cat: v.cat, title: v.title, status: v.approve ? 'pending' : 'new', exec: 'draft', versions: [{ v: 1, date: TODAY, by: uploaderName(), note: 'גרסה ראשונה', path, file: f ? f.name.split('.').pop().toUpperCase().slice(0, 4) : 'PDF', size: f ? (f.size / 1048576).toFixed(1) + 'MB' : '—' }] });
         if (v.approve) Store.data.tasks.unshift({ id: 'k' + Date.now(), type: 'approval', title: `אישור ${v.title} V1`, sub: `ביקשה ${TEAM.architect.name} · ${fmtDateShort(TODAY)}`, ref: { page: 'plans', id }, level: 'red', done: false });
         Store.log(`העלה תכנית ${v.cat}: ${v.title} V1${v.approve ? ' וביקש אישור' : ''}`, TEAM.architect.name);
         Store.notify(`נוספה תכנית חדשה: ${v.title}`, 'plans');
@@ -295,7 +297,7 @@ const ACTIONS = {
         const nv = p.versions[0].v + 1;
         const f = v.file[0];
         const path = await storeFile(f);
-        p.versions.unshift({ v: nv, date: TODAY, by: Store.live ? currentUserName() : TEAM.architect.name, note: v.note, path,
+        p.versions.unshift({ v: nv, date: TODAY, by: uploaderName(), note: v.note, path,
           file: f ? f.name.split('.').pop().toUpperCase().slice(0, 4) : p.versions[0].file, size: f ? (f.size / 1048576).toFixed(1) + 'MB' : p.versions[0].size });
         p.status = v.approve ? 'pending' : 'new';
         p.exec = 'draft'; // a new version waits for Jorge's approval for execution
@@ -435,32 +437,12 @@ const ACTIONS = {
       },
     });
   },
-  ticket() {
-    const open = Store.data.tickets.filter((t) => t.status !== 'נסגר');
-    if (!open.length) return toast('אין פניות פתוחות');
-    formModal({
-      title: 'טיפול בפניית שירות',
-      fields: [
-        { id: 'id', label: 'פנייה', type: 'select', options: open.map((t) => [t.id, `#${t.no} ${t.title}`]) },
-        { id: 'reply', label: 'תשובה ללקוח', type: 'textarea', required: true },
-        { id: 'status', label: 'סטטוס', type: 'select', options: ['בטיפול', 'נסגר'] },
-      ],
-      onSave(v) {
-        const t = Store.data.tickets.find((x) => x.id === v.id);
-        t.reply = v.reply; t.status = v.status;
-        Store.log(`עדכן פנייה #${t.no}: ${v.status}`, TEAM.pm.name);
-        Store.notify(`עדכון בפנייה #${t.no}`, 'service');
-        Store.save();
-        return 'הפנייה עודכנה';
-      },
-    });
-  },
   member() {
     formModal({
       title: 'הזמנת משתמש לפרויקט', intro: Store.live ? 'המשתמש יקבל למייל קישור כניסה, ויראה רק את הפרויקט הזה.' : 'המשתמש יקבל קישור במייל או ב-SMS לבחירת סיסמה, ויראה רק את הפרויקט הזה.',
       fields: [
         { id: 'name', label: 'שם', required: true },
-        { id: 'role', label: 'תפקיד', type: 'select', options: ['בעל הבית', 'בת/בן זוג', 'מעצב/ת מטעם המשפחה', 'בן משפחה נוסף', 'בעל מקצוע'] },
+        { id: 'role', label: 'תפקיד', type: 'select', options: ['בעל הבית', 'בת/בן זוג', 'מעצב/ת מטעם המשפחה (הרשאות צוות בפרויקט הזה)', 'בן משפחה נוסף', 'בעל מקצוע'] },
         { id: 'email', label: 'אימייל', type: 'email' }, { id: 'phone', label: 'טלפון', type: 'tel' },
       ],
       submit: 'שליחת הזמנה',
@@ -498,7 +480,7 @@ Pages['bo-project'] = () => {
       </div>
       <div class="section-title"><h2>פעולות</h2></div>
       <div class="actions-grid">
-        ${PROJECT_ACTIONS.map(([k, ic, label]) => `<button class="action-tile" data-act="${k}">${icon(ic)}${esc(label)}</button>`).join('')}
+        ${PROJECT_ACTIONS.filter(([k]) => !JORGE_ACTIONS.includes(k) || isJorge()).map(([k, ic, label]) => `<button class="action-tile" data-act="${k}">${icon(ic)}${esc(label)}</button>`).join('')}
       </div>
       <div class="grid md-2" style="margin-top:18px">
         <article class="card card-pad">
@@ -506,7 +488,7 @@ Pages['bo-project'] = () => {
           ${open.length ? `<ul class="action-list">${open.map((t) => `<li><span class="ico ${t.level}">${icon('clock')}</span><div class="txt"><b>${esc(t.title)}</b><span>${esc(t.sub)}</span></div></li>`).join('')}</ul>` : '<div class="empty">הלקוח סגר את כל המשימות</div>'}
         </article>
         ${Store.live ? `<article class="card card-pad" style="grid-column:1/-1">
-          <div class="card-head"><h3>משתמשים בפרויקט</h3><button class="btn btn-sm btn-ghost" id="pm-add">${icon('plus')}הזמנה</button></div>
+          <div class="card-head"><h3>משתמשים בפרויקט</h3>${isJorge() ? `<button class="btn btn-sm btn-ghost" id="pm-add">${icon('plus')}הזמנה</button>` : ''}</div>
           <div id="pm-list"><p class="small muted">טוען…</p></div>
         </article>` : ''}
         <article class="card card-pad">
@@ -518,7 +500,8 @@ Pages['bo-project'] = () => {
       root.querySelectorAll('[data-act]').forEach((b) => (b.onclick = () => ACTIONS[b.dataset.act]()));
       root.querySelector('#as-client').onclick = () => { Store.session.view = 'client'; Store.save(); App.go('home'); };
       if (Store.live) {
-        root.querySelector('#pm-add').onclick = () => ACTIONS.member();
+        const pa = root.querySelector('#pm-add');
+        if (pa) pa.onclick = () => ACTIONS.member();
         fillProjectUsers(root.querySelector('#pm-list'));
       }
     },
@@ -533,8 +516,8 @@ async function fillProjectUsers(box) {
   box.innerHTML = `<ul class="rows">${list.map((m) => `<li class="row">
     <div class="main-col"><div class="title" dir="ltr" style="text-align:right">${esc(m.email)}</div><div class="sub">${esc(m.role)} · הוזמן ${fmtDate(m.invited_at)}</div></div>
     <div class="end">${m.accepted_at ? pill('green', 'נכנס למערכת') : pill('yellow', 'עוד לא נכנס')}
-      <button class="btn btn-sm btn-quiet" data-resend="${esc(m.email)}">שליחת קישור</button>
-      <button class="btn btn-sm btn-quiet" data-remove="${esc(m.email)}">הסרה</button></div>
+      ${isJorge() ? `<button class="btn btn-sm btn-quiet" data-resend="${esc(m.email)}">שליחת קישור</button>
+      <button class="btn btn-sm btn-quiet" data-remove="${esc(m.email)}">הסרה</button>` : ''}</div>
   </li>`).join('')}</ul>`;
   box.querySelectorAll('[data-resend]').forEach((b) => (b.onclick = async () => {
     b.disabled = true;
@@ -562,7 +545,7 @@ Pages['bo-audit'] = () => ({
 });
 
 /* ---------- פרויקט חדש ---------- */
-Pages['bo-new'] = () => ({
+Pages['bo-new'] = () => (!isJorge() ? { title: 'פרויקט חדש', html: '<div class="page-head"><div><h1>פרויקט חדש</h1><p>רק חורחה פותח פרויקטים חדשים.</p></div></div>', mount() {} } : {
   title: 'פרויקט חדש',
   html: `
     <div class="page-head"><div><a class="link-btn small" href="#/bo-home">← כל הפרויקטים</a><h1 style="margin-top:4px">פרויקט חדש</h1><p>אחרי השמירה אפשר לשלוח ללקוחות הזמנה לפתיחת משתמש</p></div></div>
@@ -649,28 +632,11 @@ async function fillStaff(box) {
 }
 
 Pages['bo-perms'] = () => {
-  const roles = ['Admin', 'מנהל פרויקט', 'עובד / מעצבת', 'לקוח', 'בעל מקצוע / ספק'];
-  const Y = '<span class="perm-yes">✓</span>', P = '<span class="perm-part">חלקי</span>', N = '<span class="perm-no">—</span>';
-  const rows = [
-    ['כל הפרויקטים', Y, N, N, N, N],
-    ['הפרויקטים שבאחריותו', Y, Y, P, N, N],
-    ['הפרויקט שלו בלבד', Y, Y, Y, Y, Y],
-    ['יצירת פרויקט והזמנת לקוחות', Y, Y, N, N, N],
-    ['העלאת תכניות וגרסאות', Y, Y, Y, N, N],
-    ['אישור תכניות ושינויים', N, N, N, Y, N],
-    ['תקציב הבית של המשפחה', Y, Y, N, Y, N],
-    ['עלויות פנימיות ורווחיות', Y, P, N, N, N],
-    ['עדכון תשלומים', Y, Y, N, P, N],
-    ['תמונות ויומן', Y, Y, Y, Y, P],
-    ['פניות שירות', Y, Y, P, Y, P],
-    ['יומן פעילות (Audit Log)', Y, Y, N, N, N],
-    ['חסימת משתמש / ניתוק גישה', Y, P, N, N, N],
-  ];
   return {
     title: 'הרשאות',
     html: `
-      <div class="page-head"><div><h1>הרשאות לפי תפקיד</h1><p>Role Based Permissions. לקוח ובעל מקצוע רואים רק את הפרויקט שלהם.</p></div></div>
-      ${Store.live ? `<article class="card card-pad" style="margin-bottom:14px">
+      <div class="page-head"><div><h1>הרשאות</h1><p>מי רשאי לעשות מה, לפי ההחלטות מ־29.10.2026. ההרשאות נאכפות במסד עצמו, לא רק במסך.</p></div></div>
+      ${Store.live && isJorge() ? `<article class="card card-pad" style="margin-bottom:14px">
         <div class="card-head"><h3>צוות קאסה פואבלו</h3></div>
         <p class="small ink-2" style="margin-top:0">מי שברשימה נכנס ל־Back Office ורואה את כל הפרויקטים. הכניסה עם המייל שכאן.</p>
         <div id="st-list"><p class="small muted">טוען…</p></div>
@@ -680,10 +646,10 @@ Pages['bo-perms'] = () => {
           <div><button class="btn btn-primary" type="submit">${icon('plus')}הוספה לצוות</button></div>
         </form>
       </article>` : ''}
-      <article class="card"><div class="table-wrap"><table class="t perm-table">
-        <thead><tr><th>יכולת</th>${roles.map((r) => `<th>${r}</th>`).join('')}</tr></thead>
-        <tbody>${rows.map((r) => `<tr><td>${r[0]}</td>${r.slice(1).map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
-      </table></div></article>
+      <div class="legend-status" style="margin-bottom:12px">${Object.values(PERM_LABELS).map(([c, t]) => pill(c, t)).join('')}</div>
+      <div class="grid md-2">${PERMS.map(([g, rows]) => `<article class="card"><div class="card-pad" style="padding-bottom:4px"><h3>${esc(g)}</h3></div>
+        <ul class="rows">${rows.map(([t, lv]) => `<li class="row compact"><div class="main-col"><div class="title" style="font-weight:500">${esc(t)}</div></div><div class="end">${pill(...PERM_LABELS[lv])}</div></li>`).join('')}</ul></article>`).join('')}</div>
+      <p class="small muted" style="margin-top:12px">מעצבת מטעם המשפחה מקבלת הרשאות צוות רק בפרויקט שלה: מזמינים אותה בתפקיד "מעצב/ת מטעם המשפחה".</p>
       <div class="grid md-2" style="margin-top:14px">
         <article class="card card-pad"><h3 style="margin-bottom:8px">${icon('shield', 'xs')} אבטחה</h3>
           <ul class="ink-2" style="margin:0;padding-inline-start:18px">
@@ -701,7 +667,7 @@ Pages['bo-perms'] = () => {
           </ul></article>
       </div>`,
     mount(root) {
-      if (!Store.live) return;
+      if (!Store.live || !isJorge()) return;
       fillStaff(root.querySelector('#st-list'));
       root.querySelector('#st-add').onsubmit = async (e) => {
         e.preventDefault();

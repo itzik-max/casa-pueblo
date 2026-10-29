@@ -325,6 +325,19 @@ const ABOUT = {
   ],
 };
 
+// Who may do what. From Itzik's permissions questionnaire (29.10.2026). all = family and team, staff = the team
+// (and the family's own designer in her project), jorge = Jorge only, view = family sees, the team changes.
+const PERMS = [
+  ['תכניות', [['העלאת תכנית או גרסה (חורחה מקבל מייל)', 'all'], ['סימון "מאושר לביצוע" או "טיוטה"', 'staff'], ['הוספת קטגוריה', 'all'], ['אישור תכנית מטעם המשפחה (חורחה מקבל מייל)', 'all']]],
+  ['חומרים ובחירות', [['הוספה ועריכה, כולל איש קשר', 'all'], ['הזמנה וחשבונית', 'all'], ['מחיקת חומר', 'view']]],
+  ['כספים', [['רישום תשלום לקאסה פואבלו', 'jorge'], ['תקציב הבית: צפייה והוספת הוצאות', 'all']]],
+  ['מסמכים', [['העלאת מסמך (חורחה מקבל מייל)', 'all'], ['מחיקת מסמך', 'jorge'], ['מסמכים פנימיים', 'jorge']]],
+  ['לוח זמנים, תמונות וסיכום שבועי', [['עדכון לוח הזמנים', 'view'], ['העלאת תמונות', 'all'], ['כתיבת הסיכום השבועי', 'staff'], ['אישור ושליחת הסיכום השבועי', 'jorge']]],
+  ['שינויים ומטלות', [['יצירת שינוי או תוספת', 'jorge'], ['אישור שינוי או תוספת', 'all'], ['בעלי מקצוע', 'all'], ['המטלות של המשפחה', 'all']]],
+  ['ניהול', [['פרויקט חדש ופרטי פרויקט', 'jorge'], ['הזמנת בני משפחה והסרתם', 'jorge'], ['אנשי צוות', 'jorge'], ['יומן פעילות', 'staff']]],
+];
+const PERM_LABELS = { all: ['green', 'משפחה וצוות'], staff: ['blue', 'צוות'], jorge: ['red', 'חורחה בלבד'], view: ['gray', 'משפחה צופה, צוות משנה'] };
+
 // Team photos for the "about" section (from Itzik, 29.10.2026).
 const TEAM_NAMES = ['חורחה', 'יניב', 'עינב', 'אלכס', 'אולג'];
 const TEAM_PHOTOS = ['assets/img/team-site.jpg', 'assets/img/team-office.jpg', 'assets/img/team-cafe.jpg'];

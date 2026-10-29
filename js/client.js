@@ -382,7 +382,7 @@ function openPlan(id, vi = 0) {
         <div style="display:flex;gap:6px;flex-wrap:wrap">${current ? execPill(plan) : pill('gray', 'גרסה קודמת')}${current && plan.status === 'pending' ? statusPill('pending') : ''}</div>
       </div>
       ${current && approver ? `<div class="exec-box">
-        <span class="small"><b>סטטוס התכנית</b> (רק חורחה יכול לשנות)</span>
+        <span class="small"><b>סטטוס התכנית</b> (רק הצוות משנה)</span>
         <div class="seg" role="group" aria-label="סטטוס התכנית">
           <button type="button" data-exec="approved" aria-pressed="${plan.exec === 'approved'}">מאושר לביצוע</button>
           <button type="button" data-exec="draft" aria-pressed="${plan.exec !== 'approved'}">טיוטה</button>
@@ -460,10 +460,12 @@ Pages.plans = (q) => {
     title: 'תכניות',
     html: `
       <div class="page-head"><div><h1>תכניות</h1><p>התכניות העדכניות למעלה, והגרסאות הקודמות מתחת</p></div>
-        ${pending ? pill('red', `${pending} ממתינות לאישורכם`) : ''}</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">${pending ? pill('red', `${pending} ממתינות לאישורכם`) : ''}
+          ${d.plans.length ? `<button class="btn btn-ghost" id="pl-ver">${icon('layers')}גרסה חדשה</button>` : ''}
+          <button class="btn btn-accent" id="pl-up">${icon('upload')}העלאת תכנית</button></div></div>
       <div class="chips" role="group" aria-label="סינון לפי קטגוריה">
         ${['הכול', ...cats].map((c) => `<button class="chip" aria-pressed="${c === cat}" data-cat="${esc(c)}">${esc(c === 'הכול' ? 'הכל' : c)}<span class="n">${c === 'הכול' ? d.plans.length : d.plans.filter((p) => p.cat === c).length}</span></button>`).join('')}
-        ${approver ? `<button class="chip" id="pc-add">${icon('plus', 'xs')} קטגוריה</button>` : ''}
+        <button class="chip" id="pc-add">${icon('plus', 'xs')} קטגוריה</button>
       </div>
       <div class="card">
         <ul class="rows">
@@ -494,8 +496,10 @@ Pages.plans = (q) => {
       root.querySelectorAll('[data-plan]').forEach((r) => (r.onclick = (e) => { if (!e.target.closest('[data-approve]')) openPlan(r.dataset.plan); }));
       root.querySelectorAll('[data-old]').forEach((r) => (r.onclick = () => openPlan(r.dataset.old, +r.dataset.i)));
       root.querySelectorAll('[data-approve]').forEach((b) => (b.onclick = () => approvePlanFlow(b.dataset.approve)));
-      const add = root.querySelector('#pc-add');
-      if (add) add.onclick = addPlanCategoryFlow;
+      root.querySelector('#pc-add').onclick = addPlanCategoryFlow;
+      root.querySelector('#pl-up').onclick = () => ACTIONS.plan();
+      const pv = root.querySelector('#pl-ver');
+      if (pv) pv.onclick = () => ACTIONS.version();
       if (q.id) { history.replaceState(null, '', '#/plans'); openPlan(q.id); }
     },
   };
@@ -557,7 +561,8 @@ function openMaterial(id) {
           ${['Axor Uno – כרום', 'Axor Uno – ניקל מוברש'].map((o, i) => `<label class="card card-pad check" style="margin:0;box-shadow:none"><input type="radio" name="opt" value="${esc(o)}" ${i === 0 ? 'checked' : ''}><span>${esc(o)}</span></label>`).join('')}
         </div>` : ''}`,
     foot: `${m.status === 'ממתין לבחירה' ? `<button class="btn btn-primary" id="mt-choose">${icon('check')}שמירת הבחירה</button>` : ''}
-      <button class="btn btn-ghost" id="mt-edit">${icon('edit')}עריכה</button>`,
+      <button class="btn btn-ghost" id="mt-edit">${icon('edit')}עריכה</button>
+      ${isProjectStaff() ? `<button class="btn btn-quiet" id="mt-del">מחיקה</button>` : ''}`,
     onOpen(el) {
       const b = el.querySelector('#mt-choose');
       if (b) b.onclick = () => {
@@ -572,6 +577,16 @@ function openMaterial(id) {
         App.render();
       };
       el.querySelector('#mt-edit').onclick = () => { closeModal(); materialForm(m); };
+      const del = el.querySelector('#mt-del');
+      if (del) del.onclick = () => {
+        if (del.dataset.sure !== '1') { del.dataset.sure = '1'; del.textContent = 'ללחוץ שוב כדי למחוק'; return; }
+        d.materials = d.materials.filter((x) => x !== m);
+        Store.log(`מחק חומר: ${m.name}`);
+        Store.save();
+        closeModal();
+        toast('הפריט נמחק');
+        App.render();
+      };
       el.querySelectorAll('[data-fview]').forEach((x) => (x.onclick = () => { if (!openFile(m[x.dataset.fview].path)) toast('בגרסה המלאה הקובץ נפתח כאן'); }));
       MAT_FILES.forEach(([k, label]) => { if (m[k]) bindShare(el, { title: `${label} · ${m.name}`, ref: m[k].path, file: m[k].type }, k); });
       el.querySelectorAll('[data-fup]').forEach((x) => (x.onclick = () => { closeModal(); materialForm(m, x.dataset.fup); }));
@@ -865,9 +880,12 @@ Pages.photos = (q) => {
     title: 'תמונות',
     html: `
       <div class="page-head"><div><span class="eyebrow">יומן הפרויקט</span><h1>הבית, שלב אחר שלב</h1><p>עדכונים ותמונות מהשטח, לפי תאריך או לפי שלבי הבנייה</p></div>
-        <div class="seg" role="group" aria-label="תצוגה">
-          <button aria-pressed="${view === 'all'}" data-view="all">הכל</button>
-          <button aria-pressed="${view === 'stages'}" data-view="stages">ציר לפי שלבים</button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <div class="seg" role="group" aria-label="תצוגה">
+            <button aria-pressed="${view === 'all'}" data-view="all">הכל</button>
+            <button aria-pressed="${view === 'stages'}" data-view="stages">ציר לפי שלבים</button>
+          </div>
+          <button class="btn btn-accent" id="ph-up">${icon('camera')}העלאת תמונות</button>
         </div>
       </div>
       ${view === 'all' ? `<div class="chips" role="group" aria-label="סינון לפי שלב">
@@ -880,6 +898,7 @@ Pages.photos = (q) => {
       </section>`,
     mount(root) {
       root.querySelectorAll('[data-view]').forEach((b) => (b.onclick = () => App.go('photos', { view: b.dataset.view })));
+      root.querySelector('#ph-up').onclick = () => ACTIONS.photos();
       root.querySelectorAll('[data-stage]').forEach((b) => (b.onclick = () => App.go('photos', { stage: b.dataset.stage })));
       root.querySelectorAll('[data-ba]').forEach((b) => (b.onclick = () => App.go('photos', { view: q.view, stage: q.stage, ba: b.dataset.ba }, true)));
       root.querySelectorAll('[data-lb]').forEach((b) => (b.onclick = () => openLightbox(all, Number(b.dataset.lb))));
@@ -906,9 +925,11 @@ Pages.documents = (q) => {
         ${list.map((x) => `<li class="row">
           ${fileIco(x.type)}
           <div class="main-col"><div class="title">${esc(x.title)}</div><div class="sub">${esc(x.cat)} · ${fmtDate(x.date)} · ${x.size}${x.expense ? ' · מקושר להוצאה' : ''}</div></div>
-          <div class="end"><button class="btn btn-sm btn-ghost" data-view="${x.id}">${icon('eye')}צפייה</button><button class="icon-btn" aria-label="שליחה בוואטסאפ" title="וואטסאפ" data-wa="${x.id}">${icon('whatsapp')}</button><button class="icon-btn" aria-label="שליחה במייל" title="מייל" data-mail="${x.id}">${icon('mail')}</button><button class="icon-btn" aria-label="הורדה" data-dl="${x.id}">${icon('download')}</button></div>
+          <div class="end"><button class="btn btn-sm btn-ghost" data-view="${x.id}">${icon('eye')}צפייה</button><button class="icon-btn" aria-label="שליחה בוואטסאפ" title="וואטסאפ" data-wa="${x.id}">${icon('whatsapp')}</button><button class="icon-btn" aria-label="שליחה במייל" title="מייל" data-mail="${x.id}">${icon('mail')}</button><button class="icon-btn" aria-label="הורדה" data-dl="${x.id}">${icon('download')}</button>${isJorge() ? `<button class="icon-btn" aria-label="מחיקה" title="מחיקה" data-ddel="${x.id}">${icon('close')}</button>` : ''}</div>
         </li>`).join('')}
-      </ul></div>`,
+      </ul></div>
+      ${isJorge() ? `<div class="section-title" style="margin-top:26px"><h2>מסמכים פנימיים</h2><span class="small muted">רק חורחה רואה</span></div>
+      <div class="card" id="int-docs"><p class="small muted card-pad">טוען…</p></div>` : ''}`,
     mount(root) {
       root.querySelectorAll('[data-cat]').forEach((b) => (b.onclick = () => App.go('documents', { cat: b.dataset.cat })));
       root.querySelectorAll('[data-view],[data-dl]').forEach((b) => (b.onclick = () => {
@@ -916,10 +937,58 @@ Pages.documents = (q) => {
         if (!openFile(doc && doc.path)) toast(Store.live ? 'למסמך הזה לא צורף קובץ' : 'בגרסה המלאה הקובץ נפתח כאן');
       }));
       list.forEach((x) => bindShare(root, { title: x.title, ref: x.path, file: x.type }, x.id));
+      root.querySelectorAll('[data-ddel]').forEach((b) => (b.onclick = () => {
+        if (b.dataset.sure !== '1') { b.dataset.sure = '1'; toast('ללחוץ שוב כדי למחוק את המסמך'); return; }
+        const doc = d.documents.find((x) => x.id === b.dataset.ddel);
+        d.documents = d.documents.filter((x) => x !== doc);
+        Store.log(`מחק מסמך: ${doc.title}`);
+        Store.save();
+        App.render();
+      }));
+      if (isJorge()) fillInternalDocs(root.querySelector('#int-docs'));
       root.querySelector('#doc-up').onclick = () => uploadDocFlow();
     },
   };
 };
+// Jorge's internal documents: a separate table (internal_docs) and the internal/ folder, never in the family's data.
+async function fillInternalDocs(box) {
+  const d = Store.data;
+  const list = Store.live ? await Live.internalDocs(d.project.id) : (d.internalDocs || []);
+  box.innerHTML = `<ul class="rows">${list.map((x) => `<li class="row">${fileIco(x.type)}<div class="main-col"><div class="title">${esc(x.title)}</div><div class="sub">${esc(x.cat || '')} · ${fmtDate((x.created_at || x.date || '').slice(0, 10))}</div></div>
+    <div class="end"><button class="btn btn-sm btn-ghost" data-iview="${x.id}">${icon('eye')}צפייה</button><button class="icon-btn" aria-label="מחיקה" data-idel="${x.id}">${icon('close')}</button></div></li>`).join('') || '<li class="empty">אין מסמכים פנימיים</li>'}</ul>
+    <div class="card-pad"><button class="btn btn-ghost" id="int-up">${icon('upload')}העלאת מסמך פנימי</button></div>`;
+  box.querySelectorAll('[data-iview]').forEach((b) => (b.onclick = () => { const x = list.find((y) => String(y.id) === b.dataset.iview); if (!openFile(x.path)) toast('בגרסה המלאה הקובץ נפתח כאן'); }));
+  box.querySelectorAll('[data-idel]').forEach((b) => (b.onclick = async () => {
+    if (b.dataset.sure !== '1') { b.dataset.sure = '1'; toast('ללחוץ שוב כדי למחוק'); return; }
+    if (Store.live) await Live.deleteInternalDoc(b.dataset.idel);
+    else { d.internalDocs = list.filter((y) => String(y.id) !== b.dataset.idel); Store.save(); }
+    fillInternalDocs(box);
+  }));
+  box.querySelector('#int-up').onclick = () => openModal({
+    title: 'מסמך פנימי',
+    body: `<p class="small ink-2" style="margin-top:0">המשפחה לא רואה את המסמך הזה. גם הצוות לא.</p>
+      <label class="field"><span>קובץ</span><input class="input" type="file" id="iu-file"></label>
+      <label class="field"><span>שם המסמך</span><input class="input" id="iu-title"></label>
+      <label class="field"><span>קטגוריה</span><input class="input" id="iu-cat" placeholder="למשל: הצעת קבלן משנה"></label>`,
+    foot: `<button class="btn btn-primary" id="iu-save">${icon('upload')}העלאה</button>`,
+    onOpen(el) {
+      el.querySelector('#iu-save').onclick = async (ev) => {
+        const f = el.querySelector('#iu-file').files[0];
+        const title = el.querySelector('#iu-title').value.trim() || (f && f.name) || 'מסמך פנימי';
+        ev.target.disabled = true;
+        try {
+          const path = f && Store.live ? await Live.upload(f, { internal: true }) : '';
+          const doc = { title, cat: el.querySelector('#iu-cat').value.trim(), type: f ? (f.name.split('.').pop() || 'PDF').toUpperCase().slice(0, 4) : 'PDF', size: f ? (f.size / 1048576).toFixed(1) + 'MB' : '—', path };
+          if (Store.live) await Live.addInternalDoc({ ...doc, project_id: d.project.id });
+          else { d.internalDocs = [{ id: 'i' + Date.now(), date: TODAY, ...doc }, ...(d.internalDocs || [])]; Store.save(); }
+          closeModal();
+          fillInternalDocs(box);
+        } catch (e) { ev.target.disabled = false; toast('ההעלאה נכשלה: ' + e.message); }
+      };
+    },
+  });
+}
+
 function uploadDocFlow() {
   openModal({
     title: 'העלאת מסמך',
@@ -956,7 +1025,8 @@ Pages.pros = (q) => {
   return {
     title: 'בעלי מקצוע',
     html: `
-      <div class="page-head"><div><h1>בעלי מקצוע וספקים</h1><p>ספר בעלי המקצוע של הבית, גם שנים אחרי המסירה</p></div></div>
+      <div class="page-head"><div><h1>בעלי מקצוע וספקים</h1><p>ספר בעלי המקצוע של הבית, גם שנים אחרי המסירה</p></div>
+        <button class="btn btn-accent" id="pro-add">${icon('plus')}הוספת בעל מקצוע</button></div>
       <div class="toolbar"><input class="input search-input" id="pro-q" type="search" placeholder="חיפוש: חשמלאי, נגר, שם ספק…" value="${esc(term)}"></div>
       <div class="grid md-2 lg-3">
         ${list.map((p) => `
@@ -974,6 +1044,7 @@ Pages.pros = (q) => {
           </article>`).join('') || '<div class="empty">לא נמצאו בעלי מקצוע</div>'}
       </div>`,
     mount(root) {
+      root.querySelector('#pro-add').onclick = () => ACTIONS.pro();
       const inp = root.querySelector('#pro-q');
       let t;
       inp.oninput = () => { clearTimeout(t); t = setTimeout(() => App.go('pros', { q: inp.value }, true), 250); };
@@ -998,66 +1069,18 @@ Pages.service = () => {
   const d = Store.data;
   const wr = productWarranties(d);
   return {
-    title: 'שירות ואחריות',
+    title: 'אחריות',
     html: `
-      <div class="page-head"><div><h1>שירות ואחריות</h1><p>פניות שירות, ואחריות על המוצרים שנרכשו לבית</p></div>
-        <button class="btn btn-accent" id="tk-new">${icon('plus')}פנייה חדשה</button></div>
-      <div class="grid md-2">
-        <article class="card">
-          <div class="card-pad" style="padding-bottom:4px"><h3>הפניות שלי</h3></div>
-          <ul class="rows">
-            ${d.tickets.map((t) => `<li class="row">
-              <div class="main-col"><div class="title">#${t.no} · ${esc(t.title)}</div>
-                <div class="sub">${fmtDate(t.date)} · ${esc(t.cat)} · ${esc(t.by)}</div>
-                ${t.reply ? `<div class="tl-note" style="margin-top:6px">${esc(t.reply)}</div>` : ''}</div>
-              <div class="end">${t.status === 'נסגר' ? pill('green', 'נסגר') : t.status === 'חדש' ? pill('yellow', 'התקבל') : pill('blue', 'בטיפול')}</div>
-            </li>`).join('') || '<li class="empty">אין פניות</li>'}
-          </ul>
-        </article>
-        <article class="card">
-          <div class="card-pad" style="padding-bottom:4px"><h3>אחריות על מוצרים</h3>
-            <p class="small muted" style="margin:4px 0 0">3 חודשים לפני שהאחריות מסתיימת נשלח אליכם מייל תזכורת.</p></div>
-          <ul class="rows">
-            ${wr.map(({ m, left }) => `<li class="row compact clickable" data-mat="${m.id}"><div class="main-col"><div class="title">${esc(m.name)}${m.maker ? ` · ${esc(m.maker)}` : ''}</div><div class="sub">אחריות עד ${fmtDate(m.warrantyUntil)}${m.supplier ? ` · ${esc(m.supplier)}` : ''}</div></div>
-              <div class="end">${warrantyPill(left)}</div></li>`).join('') || '<li class="empty">עוד לא הוזנו מוצרים עם אחריות. מוסיפים "אחריות עד" בפריט בחומרים ובחירות.</li>'}
-          </ul>
-        </article>
-      </div>`,
-    mount(root) {
-      root.querySelector('#tk-new').onclick = () => newTicketFlow();
-      root.querySelectorAll('[data-mat]').forEach((r) => (r.onclick = () => openMaterial(r.dataset.mat)));
-    },
+      <div class="page-head"><div><h1>אחריות על מוצרים</h1><p>המוצרים שנרכשו לבית ועד מתי האחריות עליהם. 3 חודשים לפני שהיא מסתיימת נשלח אליכם מייל תזכורת.</p></div></div>
+      <article class="card" style="max-width:820px">
+        <ul class="rows">
+          ${wr.map(({ m, left }) => `<li class="row clickable" data-mat="${m.id}"><div class="main-col"><div class="title">${esc(m.name)}${m.maker ? ` · ${esc(m.maker)}` : ''}</div><div class="sub">אחריות עד ${fmtDate(m.warrantyUntil)}${m.supplier ? ` · ${esc(m.supplier)}` : ''}${m.contactPhone ? ` · ${esc(m.contactName || '')} <span class="ltr">${esc(m.contactPhone)}</span>` : ''}</div></div>
+            <div class="end">${warrantyPill(left)}</div></li>`).join('') || '<li class="empty">עוד לא הוזנו מוצרים עם אחריות. מוסיפים "אחריות עד" בפריט בחומרים ובחירות.</li>'}
+        </ul>
+      </article>`,
+    mount(root) { root.querySelectorAll('[data-mat]').forEach((r) => (r.onclick = () => openMaterial(r.dataset.mat))); },
   };
 };
-function newTicketFlow() {
-  openModal({
-    title: 'פתיחת פנייה',
-    body: `
-      <label class="field"><span>מה קרה?</span><input class="input" id="tk-title" placeholder="למשל: דלת ארון לא נסגרת עד הסוף"></label>
-      <label class="field"><span>תחום</span><select class="input" id="tk-cat">${PRO_CATEGORIES.map((c) => `<option>${c}</option>`).join('')}<option>אחר</option></select></label>
-      <label class="field"><span>פירוט</span><textarea class="input" id="tk-desc"></textarea></label>
-      <label class="field"><span>תמונה</span><input class="input" type="file" accept="image/*" capture="environment"></label>`,
-    foot: `<button class="btn btn-primary" id="tk-send">${icon('send')}שליחה</button>`,
-    onOpen(el) {
-      el.querySelector('#tk-send').onclick = async (ev) => {
-        const title = el.querySelector('#tk-title').value.trim();
-        if (!title) { el.querySelector('#tk-title').focus(); return; }
-        ev.target.disabled = true;
-        let photo = '';
-        const pf = el.querySelector('input[type=file]').files[0];
-        try { photo = await storeFile(pf && await shrinkImage(pf)); } catch (e) { ev.target.disabled = false; return; }
-        const no = Math.max(1000, ...Store.data.tickets.map((t) => t.no)) + 1;
-        Store.data.tickets.unshift({ id: 't' + Date.now(), no, title, desc: el.querySelector('#tk-desc').value.trim(), photo, date: TODAY, status: 'חדש', cat: el.querySelector('#tk-cat').value, by: currentUserName(), reply: '' });
-        Store.log(`פתח פניית שירות #${no}: ${title}`);
-        Store.save();
-        closeModal();
-        toast(`פנייה #${no} נשלחה. נחזור אליכם תוך יום עסקים`);
-        App.render();
-      };
-    },
-  });
-}
-
 /* ---------- משימות ואישורים ---------- */
 Pages.tasks = () => {
   const d = Store.data;

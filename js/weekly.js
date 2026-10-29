@@ -73,9 +73,9 @@ Pages['bo-weekly'] = () => {
         <div class="row-actions" style="flex-wrap:wrap">
           <button class="btn btn-ghost" id="wk-auto">${icon('edit')}מילוי אוטומטי ממה שקרה השבוע</button>
           <span class="spacer"></span>
-          <button class="btn btn-ghost" id="wk-save">שמירת טיוטה</button>
-          <button class="btn btn-primary" id="wk-approve">${icon('check')}אישור לשליחה ב־17:00</button>
-          <button class="btn btn-accent" id="wk-now">${icon('send')}שליחה עכשיו</button>
+          <button class="btn btn-ghost" id="wk-save">${isJorge() ? 'שמירת טיוטה' : 'שמירה (חורחה מאשר ושולח)'}</button>
+          ${isJorge() ? `<button class="btn btn-primary" id="wk-approve">${icon('check')}אישור לשליחה ב־17:00</button>
+          <button class="btn btn-accent" id="wk-now">${icon('send')}שליחה עכשיו</button>` : ''}
         </div>
         ${w && w.approvedBy ? `<p class="small muted" style="margin-bottom:0">אושר ע״י ${esc(w.approvedBy)}${w.approvedAt ? ` · ${fmtWhen(w.approvedAt.slice(0, 16).replace('T', ' '))}` : ''}</p>` : ''}
       </article>
@@ -104,7 +104,8 @@ Pages['bo-weekly'] = () => {
         toast('הטיוטה מולאה. כדאי לעבור, לנסח ולמחוק מה שלא צריך.');
       };
       root.querySelector('#wk-save').onclick = () => { upsert('draft'); Store.log('עדכן את טיוטת הסיכום השבועי'); Store.save(); toast('הטיוטה נשמרה'); App.render(); };
-      root.querySelector('#wk-approve').onclick = () => {
+      const ap = root.querySelector('#wk-approve');
+      if (ap) ap.onclick = () => {
         const cur = upsert('approved');
         if (!cur.done.length) return toast('צריך לפחות נקודה אחת ב"מה עשינו"');
         Store.log('אישר את הסיכום השבועי');
@@ -112,7 +113,8 @@ Pages['bo-weekly'] = () => {
         toast('אושר. הסיכום יעלה ללקוחות ביום שישי ב־17:00');
         App.render();
       };
-      root.querySelector('#wk-now').onclick = async () => {
+      const now = root.querySelector('#wk-now');
+      if (now) now.onclick = async () => {
         const cur = upsert('now');
         if (!cur.done.length) return toast('צריך לפחות נקודה אחת ב"מה עשינו"');
         if (!confirm('לשלוח את הסיכום ללקוחות עכשיו?')) return;
