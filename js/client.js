@@ -139,17 +139,11 @@ function aboutSection() {
     </div>
     <div class="about-grid">
       ${ABOUT.tiles.slice(0, 3).map(aboutTile).join('')}
-      <div class="about-tile photo">
-        <span class="lux"><img src="assets/img/j-33.jpg" alt="סלון בפרויקט של קאסה פואבלו ברמת השרון" loading="lazy"></span>
-        <div class="quote">״בית לעם״</div>
+      <div class="about-tile photo team">
+        <button class="lux" data-team="0" aria-label="הצוות של קאסה פואבלו, לתצוגה מלאה"><img src="${TEAM_PHOTOS[0]}" alt="הצוות של קאסה פואבלו באתר בנייה: ${TEAM_NAMES.join(', ')}" loading="lazy"></button>
+        <div class="quote"><span class="eyebrow">הצוות שלנו</span><b>${TEAM_NAMES.join(' · ')}</b><p>האנשים שבונים לכם את הבית, מהשרטוט הראשון ועד המפתח.</p></div>
       </div>
       ${ABOUT.tiles.slice(3).map(aboutTile).join('')}
-    </div>
-    <div class="team-block">
-      <div class="team-head"><span class="eyebrow">הצוות שלנו</span><h3>${TEAM_NAMES.join(' · ')}</h3><p>האנשים שבונים לכם את הבית, מהשרטוט הראשון ועד המפתח.</p></div>
-      <div class="team-photos">
-        ${TEAM_PHOTOS.map((src, i) => `<button class="lux" data-team="${i}" aria-label="תמונת צוות"><img src="${src}" alt="צוות קאסה פואבלו" loading="lazy"></button>`).join('')}
-      </div>
     </div>
     <div class="about-foot"><span>Casa Pueblo · רח׳ זרחין 7, רעננה</span><a href="https://www.casa-pueblo.co.il" target="_blank" rel="noopener">casa-pueblo.co.il</a></div>
   </section>`;
