@@ -276,7 +276,7 @@ function seedData() {
 
     // Back-office portfolio (other families shown only to staff)
     portfolio: [
-      { id: 'p-avrahami', name: 'בית אברהמי', client: 'אורי ונועה אברהמי', city: 'רמת השרון', pm: 'חורחה עברין', stage: 'עבודות גמר', progress: 68, openTasks: 5, pendingApprovals: 3, schedule: 'delay', alerts: 1, img: 'assets/img/hero-4.jpg' },
+      { id: 'p-avrahami', name: 'בית אברהמי', client: 'אורי ונועה אברהמי', city: 'רמת השרון', pm: 'חורחה עברין', stage: 'עבודות גמר', progress: 68, openTasks: 5, pendingApprovals: 3, schedule: 'delay', alerts: 1, img: 'assets/img/hero-home.jpg' },
       { id: 'p-shalev', name: 'דירת שליו', client: 'משפחת שליו', city: 'תל אביב', pm: 'חורחה עברין', stage: 'תשתיות', progress: 41, openTasks: 2, pendingApprovals: 1, schedule: 'ok', alerts: 0, img: 'assets/img/hero-1.jpg' },
       { id: 'p-katz', name: 'וילה כץ', client: 'משפחת כץ', city: 'כפר שמריהו', pm: 'עדי פרידמן', stage: 'תכנון', progress: 14, openTasks: 4, pendingApprovals: 2, schedule: 'ok', alerts: 0, img: 'assets/img/t-101.jpg' },
       { id: 'p-bendavid', name: 'פנטהאוז בן דוד', client: 'משפחת בן דוד', city: 'הרצליה', pm: 'עדי פרידמן', stage: 'התקנות', progress: 86, openTasks: 1, pendingApprovals: 0, schedule: 'ok', alerts: 0, img: 'assets/img/hero-5.jpg' },

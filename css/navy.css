@@ -328,7 +328,7 @@ button.lux { padding: 0; border: 0; cursor: zoom-in; width: 100%; }
   background: #0a1322;
 }
 @media (min-width: 900px) { .lux-hero { margin: -34px -32px 0; min-height: 84vh; } }
-@media (min-width: 1320px) { .lux-hero { margin-inline: calc((1256px - 100vw) / 2); } }
+@media (min-width: 1320px) { .shell.tabs-mode .lux-hero { margin-inline: calc((1256px - 100vw) / 2); } }
 body.theme-navy { overflow-x: clip; }
 .lux-hero .bg {
   position: absolute; inset: 0; background-size: cover; background-position: center 60%;
