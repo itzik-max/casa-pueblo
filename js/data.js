@@ -340,7 +340,7 @@ const PERM_LABELS = { all: ['green', 'משפחה וצוות'], staff: ['blue', '
 
 // Team photos for the "about" section (from Itzik, 29.10.2026).
 const TEAM_NAMES = ['חורחה', 'יניב', 'עינב', 'אלכס', 'אולג'];
-const TEAM_PHOTOS = ['assets/img/team-site.jpg', 'assets/img/team-office.jpg', 'assets/img/team-cafe.jpg'];
+const TEAM_PHOTOS = ['assets/img/team.jpg'];
 
 // Real before / after pairs from the Ramat Hasharon project on the company site.
 const BEFORE_AFTER = [

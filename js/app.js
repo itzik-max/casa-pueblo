@@ -79,7 +79,7 @@ const App = {
 function loginView() {
   return `
   <div class="login">
-    <div class="login-visual" role="img" aria-label="ילדים רצים מול בית מודרני">
+    <div class="login-visual" role="img" aria-label="משפחה בחצר של בית פרטי: ילדים משחקים על הדשא וההורים יושבים מתחת לפרגולה">
       <div class="quote"><div class="serif">כל הבית. כל הפרויקט. במקום אחד.</div><p>הבית שלכם, המקצוענות שלנו.</p></div>
     </div>
     <div class="login-panel">
@@ -114,7 +114,7 @@ function loginView() {
 function liveLoginView() {
   return `
   <div class="login">
-    <div class="login-visual" role="img" aria-label="ילדים רצים מול בית מודרני">
+    <div class="login-visual" role="img" aria-label="משפחה בחצר של בית פרטי: ילדים משחקים על הדשא וההורים יושבים מתחת לפרגולה">
       <div class="quote"><div class="serif">כל הבית. כל הפרויקט. במקום אחד.</div><p>הבית שלכם, המקצוענות שלנו.</p></div>
     </div>
     <div class="login-panel">
